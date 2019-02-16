@@ -14,7 +14,8 @@ namespace SR {
 
 
     /** A vector knob control drawn using graphics primitves */
-    class SRVectorKnobText : public IKnobControlBase
+    class SRVectorKnobText
+      : public IKnobControlBase
       , public IVectorBase
     {
     public:
@@ -124,7 +125,8 @@ namespace SR {
 
 
     /** A basic control to display some text */
-    class SRLogo : public IControl
+    class SRLogo
+      : public IControl
     {
     public:
       SRLogo(IRECT bounds, const char* str = "", const IText& text = DEFAULT_TEXT, const IColor& BGColor = DEFAULT_BGCOLOR)
@@ -150,7 +152,8 @@ namespace SR {
 
 
     /** A base class for mult-strip/track controls, such as multi-sliders, meters */
-    class SRTrackControlBase : public IControl
+    class SRTrackControlBase
+      : public IControl
       , public IVectorBase
     {
     public:
@@ -267,7 +270,8 @@ namespace SR {
     // ------------
 
     template <int MAXNC = 1, int QUEUE_SIZE = 1024>
-    class SRMeter : public SRTrackControlBase {
+    class SRMeter
+      : public SRTrackControlBase {
     public:
 
       static constexpr int kUpdateMessage = 0;
@@ -518,7 +522,8 @@ namespace SR {
     };
 
     /** A basic control to fill a rectangle with a color or gradient */
-    class SRPanel : public IControl {
+    class SRPanel
+      : public IControl {
     public:
       SRPanel(IRECT bounds, const IColor& color, bool drawFrame = false)
         : IControl(bounds, kNoParameter)
@@ -565,7 +570,8 @@ namespace SR {
     // Preset Menu
 // -----------------------------------
 
-    class SRPresetMenu : public IControl {
+    class SRPresetMenu
+      : public IControl {
     public:
       SRPresetMenu(IPlug *pPlug, IRECT bounds, IText pText, const char** pNamedParams)
         : IControl(bounds, -1) {
@@ -586,7 +592,70 @@ namespace SR {
 
 
     // TODO: Draw with PathConvexShape from ptr to member array updated from Updatefunction
-    class SRFrequencyResponseMeter : public IControl
+    class SRGraphBase
+      : public IControl
+      , public IVectorBase
+    {
+    public:
+      SRGraphBase(IRECT bounds, int numValues, double* values, const IVColorSpec& colorSpec = DEFAULT_SPEC)
+        : IControl(bounds, -1)
+        , IVectorBase(colorSpec)
+        , mValues(values)
+        , mNumValues(numValues)
+        , mX(new float[numValues])
+        , mY(new float[numValues])
+      {
+        AttachIControl(this);
+      }
+
+      ~SRGraphBase() {}
+
+      void Draw(IGraphics& g) override {
+        g.PathClear();
+        g.PathMoveTo(mRECT.L, mRECT.MH());
+        for (int i = 0; i < mNumValues; i++) {
+          g.PathLineTo(mX[i], mY[i]);
+        }
+        g.PathLineTo(mRECT.R, mRECT.MH());
+        g.PathClose();
+        g.PathFill(GetColor(kHL));
+        g.PathClear();
+        g.PathMoveTo(mRECT.L, mRECT.MH());
+        for (int i = 0; i < mNumValues; i++) {
+          g.PathLineTo(mX[i], mY[i]);
+        }
+        g.PathLineTo(mRECT.R, mRECT.MH());
+        g.PathStroke(GetColor(kFG), mFrameThickness);
+      };
+
+      void OnResize() override {
+        for (int i = 0; i < mNumValues; i++) {
+          mX[i] = mRECT.L + (mRECT.W() / (mNumValues - 1.f)) * float(i);
+          mY[i] = mRECT.MH() - (mRECT.H() * mValues[i]);
+        }
+        SetDirty(false);
+      }
+
+      void Process(double* values) {
+        mValues = values;
+        for (int i = 0; i < mNumValues; i++) {
+          mValues[i] = Clip<double>(mValues[i], -1, 1);
+        }
+        OnResize();
+      };
+      //void OnMouseDown(float x, float y, const IMouseMod& mod) override;
+    private:
+      //WDL_String mDisp;
+      double* mValues;
+      int mNumValues;
+      float* mX;
+      float* mY;
+    };
+
+
+    // TODO: Draw with PathConvexShape from ptr to member array updated from Updatefunction
+    class SRFrequencyResponseMeter
+      : public IControl
       , public IVectorBase
     {
     public:
@@ -624,7 +693,7 @@ namespace SR {
         g.PathStroke(mPatternStroke, 1.f, mStrokeOptions, 0);
       };
 
-      void UpdateValues(double* values) {
+      void Process(double* values) {
         mValues = values;
         for (int i = 0; i < mNumValues; i++) {
           mValues[i] = Clip<double>(mValues[i], -1, 1);

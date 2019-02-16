@@ -13,15 +13,13 @@ namespace SR {
 
 
     // A static delayline used to delay bypassed signals to match mLatency in RTAS/AAX/VST3/AU
-    template<class T = double, int MAXNUMCHANNELS = 1, int MAXNUMFRAMES = 1024>
+    template<typename T = double, int MAXNUMCHANNELS = 1, int MAXNUMFRAMES = 1024>
     class SRBuffer
     {
     public:
       SRBuffer(int nChannels = MAXNUMCHANNELS, int nFrames = MAXNUMFRAMES)
         : mNumChannels(nChannels)
         , mNumFrames(nFrames)
-        , mWriteAddress(0)
-        //, mDTSamples(0)
       {
         mBuffer.reserve(MAXNUMCHANNELS);
         mBuffer.resize(mNumChannels);
@@ -126,13 +124,11 @@ namespace SR {
       }
 
       T** GetBuffer() {
-        //T** buffer = new T*[mNumChannels];
-        //for (int c = 0; c < mNumChannels; c++) {
-        //  buffer[c] = mBuffer[c].Get();
-        //}
-        //return buffer;
-        return mBuffer.get_allocator().;
-
+        T** buffer = new T*[mNumChannels];
+        for (int c = 0; c < mNumChannels; c++) {
+          buffer[c] = mBuffer[c].Get();
+        }
+        return buffer;
       }
 
       T SumBuffer() {
@@ -182,10 +178,8 @@ namespace SR {
 
     private:
       std::vector<WDL_TypedBuf<T>> mBuffer;
-      unsigned long mWriteAddress;
       unsigned int mNumFrames;
       unsigned int mNumChannels;
-      //unsigned long mDTSamples;
 
 
       // REPLACED:
