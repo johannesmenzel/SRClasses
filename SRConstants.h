@@ -21,10 +21,10 @@ struct ShapeFromMiddle : public IParam::Shape
     , mMin(minVal)
     , mMax(maxVal)
     , mCtr(centeredVal)
-    , mCtrPt(pos)
+    , mPos(pos)
   {
   };
-  Shape* Clone() const override { return new ShapeFromMiddle(mMin, mMax, mCtr, mCtrPt); };
+  Shape* Clone() const override { return new ShapeFromMiddle(mMin, mMax, mCtr, mPos); };
   IParam::EDisplayType GetDisplayType() const override
   {
     if (mShape > 2.5) return IParam::EDisplayType::kDisplayCubeRoot;
@@ -41,7 +41,7 @@ struct ShapeFromMiddle : public IParam::Shape
     return std::pow((value - param.GetMin()) / (param.GetMax() - param.GetMin()), 1.0 / mShape);
   };
   double mShape;
-  double mMin, mMax, mCtr, mCtrPt;
+  double mMin, mMax, mCtr, mPos;
 };
 
 // Struct object containing possible parameters properties
