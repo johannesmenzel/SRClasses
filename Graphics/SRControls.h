@@ -608,9 +608,14 @@ namespace SR {
         AttachIControl(this);
       }
 
-      ~SRGraphBase() {}
+      ~SRGraphBase() {
+        delete[] mX;
+        delete[] mY;
+        delete[] mValues;
+      }
 
       void Draw(IGraphics& g) override {
+        // Fill Graph
         g.PathClear();
         g.PathMoveTo(mRECT.L, mRECT.MH());
         for (int i = 0; i < mNumValues; i++) {
@@ -619,10 +624,15 @@ namespace SR {
         g.PathLineTo(mRECT.R, mRECT.MH());
         g.PathClose();
         g.PathFill(GetColor(kHL));
+
+        // Draw Graph
         g.PathClear();
         g.PathMoveTo(mRECT.L, mRECT.MH());
         for (int i = 0; i < mNumValues; i++) {
-          g.PathLineTo(mX[i], mY[i]);
+          //if (mY[i] == mRECT.T && mY[i-1] == mRECT.T || mY[i] == mRECT.B && mY[i - 1] == mRECT.B)
+          //  g.PathMoveTo(mX[i], mY[i]);
+          //else
+            g.PathLineTo(mX[i], mY[i]);
         }
         g.PathLineTo(mRECT.R, mRECT.MH());
         g.PathStroke(GetColor(kFG), mFrameThickness);
@@ -631,7 +641,7 @@ namespace SR {
       void OnResize() override {
         for (int i = 0; i < mNumValues; i++) {
           mX[i] = mRECT.L + (mRECT.W() / (mNumValues - 1.f)) * float(i);
-          mY[i] = mRECT.MH() - (mRECT.H() * mValues[i]);
+          mY[i] = mRECT.MH() - (mRECT.H() * mValues[i] * 0.5f);
         }
         SetDirty(false);
       }
