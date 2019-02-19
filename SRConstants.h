@@ -16,10 +16,15 @@
   /** custom parameter shaping from middle position */
 struct ShapeFromMiddle : public IParam::Shape
 {
-  ShapeFromMiddle(double minVal = 0.0, double maxVal = 1.0, double centeredVal = 0.5, double pos = 0.5) : mShape(log((centeredVal - minVal) / (maxVal - minVal)) / log(pos))
+  ShapeFromMiddle(double minVal = 0.0, double maxVal = 1.0, double centeredVal = 0.5, double pos = 0.5)
+    : mShape(log((centeredVal - minVal) / (maxVal - minVal)) / log(pos))
+    , mMin(minVal)
+    , mMax(maxVal)
+    , mCtr(centeredVal)
+    , mCtrPt(pos)
   {
   };
-  Shape* Clone() const override { return new ShapeFromMiddle(); };
+  Shape* Clone() const override { return new ShapeFromMiddle(mMin, mMax, mCtr, mCtrPt); };
   IParam::EDisplayType GetDisplayType() const override
   {
     if (mShape > 2.5) return IParam::EDisplayType::kDisplayCubeRoot;
@@ -35,8 +40,8 @@ struct ShapeFromMiddle : public IParam::Shape
   double ValueToNormalized(double value, const IParam& param) const override {
     return std::pow((value - param.GetMin()) / (param.GetMax() - param.GetMin()), 1.0 / mShape);
   };
-
   double mShape;
+  double mMin, mMax, mCtr, mCtrPt;
 };
 
 // Struct object containing possible parameters properties
