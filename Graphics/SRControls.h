@@ -157,7 +157,7 @@ namespace SR {
       , public IVectorBase
     {
     public:
-      SRTrackControlBase(IRECT bounds, int maxNTracks = 1, float minTrackValue = 0.f, float maxTrackValue = 4.f, const char* trackNames = 0, ...)
+      SRTrackControlBase(IRECT bounds, int maxNTracks = 1, float minTrackValue = 0.f, float maxTrackValue = 1.f, const char* trackNames = 0, ...)
         : IControl(bounds)
         , mMaxNTracks(maxNTracks)
         , mMinTrackValue(minTrackValue)
@@ -356,7 +356,7 @@ namespace SR {
 
       // If you want to create a meter with decibel values
       SRMeter(IRECT bounds, bool drawFromTop = false, bool drawInverted = false, float minDb = 90., float maxDb = 0., float shape = 1.0, int markStep = 1, int labelStep = 6, const char* trackNames = 0, ...)
-        : SRTrackControlBase(bounds, MAXNC, 0, 1., trackNames)
+        : SRTrackControlBase(bounds, MAXNC, DBToAmp(minDb), DBToAmp(maxDb), trackNames)
         , mDrawFromTop(drawFromTop)
         , mDrawInverted(drawInverted)
         , mMinDb(minDb)
@@ -609,9 +609,9 @@ namespace SR {
       }
 
       ~SRGraphBase() {
-        delete[] mX;
-        delete[] mY;
-        delete[] mValues;
+        //delete[] mX;
+        //delete[] mY;
+        //delete[] mValues;
       }
 
       void Draw(IGraphics& g) override {
@@ -649,7 +649,7 @@ namespace SR {
       void Process(double* values) {
         mValues = values;
         for (int i = 0; i < mNumValues; i++) {
-          mValues[i] = Clip<double>(mValues[i], -1, 1);
+          mValues[i] = Clip<double>(mValues[i], -1., 1.);
         }
         OnResize();
       };
