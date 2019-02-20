@@ -1,6 +1,9 @@
 /*
-Taken from WDL-OL "NChanDelay.h"
+How is the buffer implemented?
+1 - std::vector
+2 - Ptrlist
 */
+#define BUFFERIMPL 2
 
 #ifndef SRBUFFER_H
 #define SRBUFFER_H
@@ -12,7 +15,9 @@ namespace SR {
   namespace DSP {
 
 
-    // A static delayline used to delay bypassed signals to match mLatency in RTAS/AAX/VST3/AU
+    /*
+    Buffer in progress with PtrList of WDL_Typedbuf or vectors
+    */
     template<typename T = double, int MAXNUMCHANNELS = 1, int MAXNUMFRAMES = 1024>
     class SRBuffer
     {
@@ -21,50 +26,41 @@ namespace SR {
         : mNumChannels(nChannels)
         , mNumFrames(nFrames)
       {
+#if BUFFERIMPL == 1
         mBuffer.reserve(MAXNUMCHANNELS);
         mBuffer.resize(mNumChannels);
         for (int c = 0; c < mNumChannels; c++) {
           mBuffer[c].Resize(mNumFrames);
-        }
-      }
-
-      // REPLACED:
-      /*
-      SRBuffer(int maxInputChans = 2, int maxOutputChans = 2)
-        : mNumInChans(maxInputChans)
-        , mNumOutChans(maxOutputChans)
-        , mWriteAddress(0)
-        , mDTSamples(0)
-      {
-      }
-      */
+    }
+#elif BUFFERIMPL == 2
+        mBuffer.Resize()
+          for (int c = 0; c < MAXNUMCHANNELS; c++) {
+            mBuffer[c].Add(new WDL_TypedBuf<T>);
+            mBuffer[c].Resize(mNumFrames);
+          }
+#endif
+  }
 
       ~SRBuffer() {
+#if BUFFERIMPL == 1
         mBuffer.clear();
-      }
-
-
-      // we dont want to set channelsize, because we have MAXNUMCHANNELS
-      //void SetNumChannels(int nChannels) {
-      //  if (nChannels > mNumChannels) {
-      //    for (c = mNumChannels; c < nChannels; c++) {
-      //      mBuffer.Add(0.0);
-      //    }
-      //  }
-      //  else
-      //  {
-
-      //  }
-      //  mBuffer.Delete()
-
-      //  SizeBuffer(nChannels, mNumFrames);
-      //}
+#elif BUFFERIMPL == 2
+        for (int c = 0; c < MAXNUMCHANNELS; c++) {
+          mBuffer[c].Empty();
+        }
+        mBuffer.Empty();
+#endif
+}
 
       void SetNumFrames(int nFrames = MAXNUMFRAMES) {
+        mNumFrames = nFrames;
         for (int c = 0; c < mNumChannels; c++) {
-          mNumFrames = nFrames;
+#if BUFFERIMPL == 1
           mBuffer[c].Resize(mNumFrames, true);
-        }
+#elif BUFFERIMPL == 2
+          mBuffer[c].Resize(mNumFrames, true);
+#endif
+      }
       }
 
       void ResetBuffer(int nChannels = MAXNUMCHANNELS, int nFrames = MAXNUMFRAMES) {
@@ -77,15 +73,6 @@ namespace SR {
         //ClearBuffer();
       }
 
-      // REPLACED: 
-      /*void SetDelayTime(int delayTimeSamples)
-      {
-        mDTSamples = delayTimeSamples;
-        mBuffer.Resize(mNumInChans * delayTimeSamples);
-        mWriteAddress = 0;
-        ClearBuffer();
-      }*/
-
       void ClearBuffer() {
         for (int c = 0; c < mNumChannels; c++) {
           //memset(mBuffer[c].Get(), 0, mNumChannels * mBuffer[c].GetSize() * sizeof(T));
@@ -93,16 +80,12 @@ namespace SR {
         }
       }
 
-      // REPLACED:
-      /*
-      void ClearBuffer()
-      {
-        memset(mBuffer.Get(), 0, mNumInChans * mDTSamples * sizeof(double));
-      }
-      */
-
       void ProcessBuffer(T in, int channel, int sample) {
+#if BUFFERIMPL == 1
         mBuffer[channel].Get()[sample] = in;
+#elif BUFFERIMPL == 2
+        mBuffer[channel]->Get()[sample] = in;
+#endif
       }
 
       void ProcessBuffer(T* in, int channel) {
@@ -124,11 +107,13 @@ namespace SR {
       }
 
       T** GetBuffer() {
-        T** buffer = new T*[mNumChannels];
-        for (int c = 0; c < mNumChannels; c++) {
-          buffer[c] = mBuffer[c].Get();
-        }
-        return buffer;
+        //T** buffer = new T*[mNumChannels];
+        //for (int c = 0; c < mNumChannels; c++) {
+        //  buffer[c] = mBuffer[c].Get();
+        //}
+        //return buffer;
+
+        mBuffer.GetList();
       }
 
       T SumBuffer() {
@@ -145,61 +130,17 @@ namespace SR {
         return SumBuffer() / (mNumFrames * mNumChannels);
       }
 
-
-
-      // COMMENTED:
-        /*
-        void ProcessBlock(double** inputs, double** outputs, int nFrames)
-        {
-          double* buffer = mBuffer.Get();
-
-          for (int s = 0; s < nFrames; ++s)
-          {
-            signed long readAddress = mWriteAddress - mDTSamples;
-            readAddress %= mDTSamples;
-
-            for (int chan = 0; chan < mNumInChans; chan++)
-            {
-              if (chan < mNumOutChans)
-              {
-                int offset = chan * mDTSamples;
-                outputs[chan][s] = buffer[offset + readAddress];
-                buffer[offset + mWriteAddress] = inputs[chan][s];
-              }
-            }
-
-            mWriteAddress++;
-            mWriteAddress %= mDTSamples;
-          }
-        }
-        */
-
-
-
     private:
-      std::vector<WDL_TypedBuf<T>> mBuffer;
+      WDL_PtrList<WDL_TypedBuf<T>> mBuffer;
+      //std::vector<WDL_TypedBuf<T>> mBuffer;
       unsigned int mNumFrames;
       unsigned int mNumChannels;
-
-
-      // REPLACED:
-      /*
-      WDL_TypedBuf<double> mBuffer;
-      unsigned long mWriteAddress;
-      unsigned int mNumInChans, mNumOutChans;
-      unsigned long mDTSamples;
-      */
-
     };
 
-    //REPLACED:
+
     /*
-    } WDL_FIXALIGN;
+    Working Buffer with ordinary T** double pointers
     */
-
-
-
-
     template<class T = double, int MAXNUMCHANNELS = 1, int MAXNUMFRAMES = 1024>
     class SRBuffer2 {
     public:
@@ -248,9 +189,9 @@ namespace SR {
       void ProcessBuffer(T **in) { mBuffer = in; }
       void ProcessBuffer(T *in, int channel = 0) { mBuffer[channel] = in; }
       void ProcessBuffer(T in, int channel = 0, int sample = 0) { mBuffer[channel][sample] = in; }
-      T** GetBuffer()                         { return mBuffer; }
-      T*  GetBuffer(int channel)              { return mBuffer[channel]; }
-      T   GetBuffer(int channel, int sample)  { return mBuffer[channel][sample]; }
+      T** GetBuffer() { return mBuffer; }
+      T*  GetBuffer(int channel) { return mBuffer[channel]; }
+      T   GetBuffer(int channel, int sample) { return mBuffer[channel][sample]; }
 
       T AverageBuffer() {
         T sum = 0.0;
@@ -264,9 +205,9 @@ namespace SR {
 
       T AverageBuffer(int channel) {
         T sum = 0.0;
-          for (int s = 0; s < mNumFrames; s++) {
-            sum += std::fabs(mBuffer[channel][s]);
-          }
+        for (int s = 0; s < mNumFrames; s++) {
+          sum += std::fabs(mBuffer[channel][s]);
+        }
         return sum / (T)mNumFrames;
       }
 
