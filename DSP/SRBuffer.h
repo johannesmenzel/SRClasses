@@ -4,7 +4,7 @@ How is the buffer implemented?
 2 - Ptrlist
 3 - T**
 */
-#define BUFFERIMPL 2
+#define BUFFERIMPL 3
 
 #ifndef SRBUFFER_H
 #define SRBUFFER_H
@@ -39,7 +39,7 @@ namespace SR {
         mBuffer.resize(mNumChannels);
         for (int c = 0; c < mNumChannels; c++) {
           mBuffer[c].Resize(mNumFrames);
-    }
+        }
 #elif BUFFERIMPL == 2 // ptr
         for (int c = 0; c < MAXNUMCHANNELS; c++) {
           mBuffer.Add(new WDL_TypedBuf<T>);
@@ -50,16 +50,16 @@ namespace SR {
           mBuffer[c] = new T[mNumFrames];
         }
 #endif
-  }
+      }
 
       // Destruct class
       ~SRBuffer() {
 #if BUFFERIMPL == 1 // vec
         mBuffer.clear();
 #elif BUFFERIMPL == 2 //ptr
-        for (int c = 0; c < MAXNUMCHANNELS; c++) {
-          delete[] mBuffer.Get(c);
-        }
+        //for (int c = 0; c < MAXNUMCHANNELS; c++) {
+        //  mBuffer.Delete(c);
+        //}
         mBuffer.Empty();
 #elif BUFFERIMPL == 3 // T**
         for (int c = 0; c < MAXNUMCHANNELS; c++) {
@@ -67,7 +67,7 @@ namespace SR {
         }
         delete[] mBuffer;
 #endif
-}
+      }
 
       // Set blocksize
       void SetNumFrames(int nFrames = MAXNUMFRAMES) {
@@ -80,7 +80,7 @@ namespace SR {
 #elif BUFFERIMPL == 3 // T**
           if (nFrames != mNumFrames) ResetBuffer(mNumChannels, nFrames);
 #endif
-      }
+        }
       }
 
       // Set number of channels
@@ -105,24 +105,30 @@ namespace SR {
         SetNumFrames(nFrames);
         //ClearBuffer();
 #elif BUFFERIMPL == 2 // ptr
-        // delete dynamic 2D array
-        for (int c = 0; c < mNumChannels; c++) {
-          if (mBuffer.Get(c)) {
-            //delete[] mBuffer.Get(c);
-            mBuffer.Delete(c);
-          }
-        }
-        if (mBuffer) mBuffer.Empty();
+        //// delete dynamic 2D array
+        //for (int c = 0; c < mNumChannels; c++) {
+        //  if (mBuffer.Get(c)) {
+        //    //delete[] mBuffer.Get(c);
+        //    mBuffer.Delete(c);
+        //  }
+        //}
+        ////if (mBuffer) mBuffer.Empty();
 
-        // change channel and frames count
-        mNumChannels = nChannels;
-        mNumFrames = nFrames;
+        //// change channel and frames count
+        //mNumChannels = nChannels;
+        //mNumFrames = nFrames;
+        //ClearBuffer();
 
-        // create new 2D array;
-        for (int c = 0; c < mNumChannels; c++) {
-          mBuffer.Add(new WDL_TypedBuf<T>);
-          mBuffer.Get(c)->Resize(mNumFrames);
+        //// create new 2D array;
+        //for (int c = 0; c < mNumChannels; c++) {
+        //  mBuffer.Add(new WDL_TypedBuf<T>);
+        //  mBuffer.Get(c)->Resize(mNumFrames);
+        //}
+
+        for (int c = 0; c < MAXNUMCHANNELS; c++) {
+          mBuffer.Get(c)->Resize(mNumFrames, true);
         }
+        ClearBuffer();
 #elif BUFFERIMPL == 3 // T**
         // delete dynamic 2D array
         for (int c = 0; c < mNumChannels; c++) {
@@ -145,10 +151,17 @@ namespace SR {
 
       // Clear buffer (set data to all zeros)
       void ClearBuffer() {
-        for (int c = 0; c < mNumChannels; c++) {
-          //memset(mBuffer[c].Get(), 0, mNumChannels * mBuffer[c].GetSize() * sizeof(T));
-          mBuffer.clear();
+#if BUFFERIMPL == 1 // vec
+        mBuffer.clear();
+#elif BUFFERIMPL == 2 // ptr
+        //memset(mBuffer.GetList(), 0, MAXNUMCHANNELS * mNumFrames * sizeof(T));
+        for (int c = 0; c < MAXNUMCHANNELS; c++) {
+          memset(mBuffer.Get(c), 0, mNumFrames * sizeof(T));
         }
+#elif BUFFERIMPL == 3 // T**
+        memset(mBuffer, 0, mNumChannels * mNumFrames * sizeof(T));
+        // TODO
+#endif
       }
 
 
@@ -257,7 +270,7 @@ namespace SR {
           sum += (T)mBuffer[channel][s];
 #endif
           return sum;
-      }
+        }
       }
 
       // Calculate average of all data of all channels
