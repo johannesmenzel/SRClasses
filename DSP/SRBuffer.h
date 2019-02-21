@@ -28,23 +28,23 @@ namespace SR {
       SRBuffer(int nChannels = MAXNUMCHANNELS, int nFrames = MAXNUMFRAMES)
         : mNumChannels(nChannels)
         , mNumFrames(nFrames)
-#if BUFFERIMPL == 3
+#if BUFFERIMPL == 3 // T**
         , mBuffer(new T*[nChannels])
 #endif
       {
-#if BUFFERIMPL == 1
+#if BUFFERIMPL == 1 // vector
         mBuffer.reserve(MAXNUMCHANNELS);
         mBuffer.resize(mNumChannels);
         for (int c = 0; c < mNumChannels; c++) {
           mBuffer[c].Resize(mNumFrames);
         }
-#elif BUFFERIMPL == 2
+#elif BUFFERIMPL == 2 // ptrlist
         mBuffer.Resize()
           for (int c = 0; c < MAXNUMCHANNELS; c++) {
             mBuffer[c].Add(new WDL_TypedBuf<T>);
             mBuffer[c].Resize(mNumFrames);
           }
-#elif BUFFERIMPL == 3
+#elif BUFFERIMPL == 3 // T**
         for (int c = 0; c < mNumChannels; c++) {
           mBuffer[c] = new T[mNumFrames];
         }
@@ -54,14 +54,14 @@ namespace SR {
 
 
       ~SRBuffer() {
-#if BUFFERIMPL == 1
+#if BUFFERIMPL == 1 // vector
         mBuffer.clear();
-#elif BUFFERIMPL == 2
+#elif BUFFERIMPL == 2 //ptrlist
         for (int c = 0; c < MAXNUMCHANNELS; c++) {
           mBuffer[c].Empty();
         }
         mBuffer.Empty();
-#elif BUFFERIMPL == 3
+#elif BUFFERIMPL == 3 // T**
         // TODO
 #endif
 
@@ -72,11 +72,11 @@ namespace SR {
       void SetNumFrames(int nFrames = MAXNUMFRAMES) {
         mNumFrames = nFrames;
         for (int c = 0; c < mNumChannels; c++) {
-#if BUFFERIMPL == 1
+#if BUFFERIMPL == 1 // vector
           mBuffer[c].Resize(mNumFrames, true);
-#elif BUFFERIMPL == 2
+#elif BUFFERIMPL == 2 // ptrlist
           mBuffer[c].Resize(mNumFrames, true);
-#elif BUFFERIMPL == 3
+#elif BUFFERIMPL == 3 // T**
           if (nFrames != mNumFrames) ResetBuffer(mNumChannels, nFrames);
 #endif
       }
@@ -85,7 +85,7 @@ namespace SR {
 
 
       void SetNumChannels(int nChannels) {
-#if BUFFERIMPL == 3
+#if BUFFERIMPL == 3 // T**
         if (nChannels != mNumChannels) ResetBuffer(nChannels, mNumFrames);
 #endif
   }
@@ -93,7 +93,7 @@ namespace SR {
 
 
       void ResetBuffer(int nChannels = MAXNUMCHANNELS, int nFrames = MAXNUMFRAMES) {
-#if BUFFERIMPL == 3
+#if BUFFERIMPL == 3 // T**
         // delete dynamic 2D array
         for (int c = 0; c < mNumChannels; c++) {
           if (mBuffer[c]) delete[] mBuffer[c];
@@ -110,7 +110,7 @@ namespace SR {
         for (int c = 0; c < mNumChannels; c++) {
           mBuffer[c] = new T[mNumFrames];
         }
-#else
+#else // not T**
         assert(nChannels <= MAXNUMCHANNELS);
         mNumChannels = nChannels;
         for (int c = 0; c < mNumChannels; c++) {
@@ -133,11 +133,11 @@ namespace SR {
 
 
       void ProcessBuffer(T in, int channel, int sample) {
-#if BUFFERIMPL == 1
+#if BUFFERIMPL == 1 // vector
         mBuffer[channel].Get()[sample] = in;
-#elif BUFFERIMPL == 2
+#elif BUFFERIMPL == 2 // ptrlist
         mBuffer[channel]->Get()[sample] = in;
-#elif BUFFERIMPL == 3
+#elif BUFFERIMPL == 3 // T**
         mBuffer[channel][sample] = in;
 #endif
 }
@@ -145,9 +145,9 @@ namespace SR {
 
 
       void ProcessBuffer(T* in, int channel) {
-#if BUFFERIMPL == 3
+#if BUFFERIMPL == 3 // T**
         mBuffer[channel] = in;
-#else
+#else // not T**
         mBuffer[channel].Get() = in;
 #endif
       }
@@ -155,9 +155,9 @@ namespace SR {
 
 
       void ProcessBuffer(T** in) {
-#if BUFFERIMPL == 3
+#if BUFFERIMPL == 3 // T**
         mBuffer = in;
-#else
+#else // not T**
         for (int c = 0; c < mNumChannels; c++) {
           mBuffer[c].Get() = in[c];
         }
@@ -167,11 +167,11 @@ namespace SR {
 
 
       T GetBuffer(int channel, int sample) {
-#if BUFFERIMPL == 1
+#if BUFFERIMPL == 1 // vector
 
         return mBuffer[channel].Get()[sample];
-#elif BUFFERIMPL == 2
-#elif BUFFERIMPL == 3
+#elif BUFFERIMPL == 2 // ptrlist
+#elif BUFFERIMPL == 3 // T**
         return mBuffer[channel][sample];
 #endif
       }
@@ -179,10 +179,10 @@ namespace SR {
 
 
       T* GetBuffer(int channel) {
-#if BUFFERIMPL == 1
+#if BUFFERIMPL == 1 // vector
         return mBuffer[channel].Get();
-#elif BUFFERIMPL == 2
-#elif BUFFERIMPL == 3
+#elif BUFFERIMPL == 2 // ptrlist
+#elif BUFFERIMPL == 3 // T**
         return mBuffer[channel];
 #endif
 
@@ -191,15 +191,15 @@ namespace SR {
 
 
       T** GetBuffer() {
-#if BUFFERIMPL == 1
+#if BUFFERIMPL == 1 // vector
         T** buffer = new T*[mNumChannels];
         for (int c = 0; c < mNumChannels; c++) {
           buffer[c] = mBuffer[c].Get();
         }
         return buffer;
-#elif BUFFERIMPL == 2
+#elif BUFFERIMPL == 2 // ptrlist
         mBuffer.GetList();
-#elif BUFFERIMPL == 3
+#elif BUFFERIMPL == 3 // T**
         return mBuffer;
 #endif
       }
@@ -219,7 +219,7 @@ namespace SR {
 
 
       T AverageBuffer() {
-#if BUFFERIMPL == 3
+#if BUFFERIMPL == 3 // T**
         T sum = 0.0;
         for (int c = 0; c < mNumChannels; c++) {
           for (int s = 0; s < mNumFrames; s++) {
@@ -227,7 +227,7 @@ namespace SR {
           }
         }
         return mNumChannels * sum / (T)mNumFrames;
-#else
+#else // not T**
         return SumBuffer() / (mNumFrames * mNumChannels);
 #endif
       }
@@ -235,7 +235,7 @@ namespace SR {
 
 
       T AverageBuffer(int channel) {
-#if BUFFERIMPL == 3
+#if BUFFERIMPL == 3 // T**
         T sum = 0.0;
         for (int s = 0; s < mNumFrames; s++) {
           sum += std::fabs(mBuffer[channel][s]);
@@ -247,16 +247,17 @@ namespace SR {
 
 
     private:
-
-#if BUFFERIMPL == 1
-      std::vector<WDL_TypedBuf<T>> mBuffer;
-#elif BUFFERIMPL == 2
-      WDL_PtrList<WDL_TypedBuf<T>> mBuffer;
-#elif BUFFERIMPL == 3
-      T **mBuffer;
-#endif
       unsigned int mNumFrames;
       unsigned int mNumChannels;
+
+#if BUFFERIMPL == 1 // vector
+      std::vector<WDL_TypedBuf<T>> mBuffer;
+#elif BUFFERIMPL == 2 // ptrlist
+      WDL_PtrList<WDL_TypedBuf<T>> mBuffer;
+#elif BUFFERIMPL == 3 // T**
+      T **mBuffer;
+#endif
+
     };
 
 
