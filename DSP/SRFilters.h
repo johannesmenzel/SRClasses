@@ -109,6 +109,23 @@ namespace SR {
       return in;
     }
 
+
+    class SRParamSmooth
+    {
+    public:
+      SRParamSmooth(double a)
+        : a(a)
+        , b(1.0 - a)
+        , z(0.0)
+      {
+      };
+      ~SRParamSmooth() {};
+      void SetCoeff(double a) { a = a; b = 1.0 - a; z = 0.0; };
+      inline double Process(double in) { z = (in * b) + (z * a); return z; }
+    private:
+      double a, b, z;
+    };
+
   }
 }
 // end namespace SRFilters
