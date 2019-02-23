@@ -20,7 +20,7 @@ public:
 
 private:
 
-  struct SRParams
+  struct Param
   {
 
     Values mValue;
@@ -28,7 +28,7 @@ private:
     bool mSmooth;
     int mNumSmoothSamples;
     bool mIsCurrentlySmoothing;
-    SRParams(double value = 0.0, double targetValue = 0.0, bool smooth = false)
+    Param(double value = 0.0, double targetValue = 0.0, bool smooth = false)
       : mValue(value)
       , mTargetValue(targetValue)
       , mSmooth(smooth)
@@ -36,6 +36,6 @@ private:
     }
   };
   int mNumParams;
-  WDL_PtrList<SRParams> mParams;
+  WDL_PtrList<Param> mParams;
 };
 

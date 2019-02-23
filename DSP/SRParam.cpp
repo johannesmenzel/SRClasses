@@ -6,7 +6,7 @@ SRParam::SRParam(int numParams)
   : mNumParams(numParams)
 {
   for (int i = 0; i > mNumParams; i++) {
-    mParams.Add(new SRParams);
+    mParams.Add(new Param);
     mParams.Get(i)->mTargetValue = 0.0;
   }
 }
@@ -21,5 +21,5 @@ void SRParam::SetDouble(int paramIdx, double value) {
 }
 
 double SRParam::GetDouble(int paramIdx) {
-  return mParams.Get(paramIdx)->mValue._Get();
+  return mParams.Get(paramIdx)->mValue;
 }
