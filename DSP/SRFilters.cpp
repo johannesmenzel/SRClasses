@@ -22,9 +22,7 @@
 //  for your own purposes, free or commercial.
 //
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <cmath>
+
 #include <cstdint>
 #include <assert.h>
 #include "SRFilters.h"
