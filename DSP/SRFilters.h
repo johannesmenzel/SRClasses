@@ -23,6 +23,9 @@
 //
 
 #pragma once
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <cmath>
 
 namespace SR {
 
@@ -113,17 +116,16 @@ namespace SR {
     class SRParamSmooth
     {
     public:
-      SRParamSmooth(double a)
-        : a(a)
-        , b(1.0 - a)
-        , z(0.0)
+      SRParamSmooth(double smoothMs, double samplerate)
+        : mSampleRate(samplerate)
       {
+        SetCoeff(smoothMs);
       };
       ~SRParamSmooth() {};
-      void SetCoeff(double a) { a = a; b = 1.0 - a; z = 0.0; };
+      void SetCoeff(double smoothMs) { a = exp(-(M_PI * 2.) / (smoothMs * 0.001 * mSampleRate)); b = 1.0 - a; z = 0.0; };
       inline double Process(double in) { z = (in * b) + (z * a); return z; }
     private:
-      double a, b, z;
+      double a, b, z, mSampleRate;
     };
 
   }
