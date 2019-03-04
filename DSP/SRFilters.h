@@ -116,16 +116,24 @@ namespace SR {
     class SRParamSmooth
     {
     public:
-      SRParamSmooth(double smoothMs, double samplerate)
-        : mSampleRate(samplerate)
+      SRParamSmooth(double smoothingTimeInMs, double samplerate)
       {
-        SetCoeff(smoothMs);
+        Reset(smoothingTimeInMs, samplerate);
+      }
+
+      ~SRParamSmooth() {}
+
+      void Reset(double smoothingTimeInMs, double samplerate) {
+        const double twoPi = 6.283185307179586476925286766559;
+        a = exp(-twoPi / (smoothingTimeInMs * 0.001 * samplerate));
+        b = 1.0 - a;
+        z = 0.0;
       };
-      ~SRParamSmooth() {};
-      void SetCoeff(double smoothMs) { a = exp(-(M_PI * 2.) / (smoothMs * 0.001 * mSampleRate)); b = 1.0 - a; z = 0.0; };
-      inline double Process(double in) { z = (in * b) + (z * a); return z; }
+
+      inline double process(double in) { z = (in * b) + (z * a); return z; }
+
     private:
-      double a, b, z, mSampleRate;
+      double a, b, z;
     };
 
   }
