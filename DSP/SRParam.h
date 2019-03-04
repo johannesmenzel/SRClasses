@@ -36,6 +36,7 @@ namespace SR {
       bool GetBool(int paramIdx); // Get boolean value at index
 
       void SetSmoothing(int paramIdx, bool smoothing); // Set if parameter changes should be smoothed
+      void SetGlobalNumSmoothSamples(int samples);
       bool IsCurrentlySmoothing(int paramIdx); // Is this parameter currently in its smoothing loop?
 
       void Process(int paramIdx);

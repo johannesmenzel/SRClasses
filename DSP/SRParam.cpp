@@ -52,7 +52,6 @@ namespace SR {
 
     }
 
-    // Set double value at index
     void SRParam::SetDouble(int paramIdx, double value, bool smooth) {
       Param* paramToSet = mParams.Get(paramIdx);
       paramToSet->mTargetValue = (double)value;
@@ -63,7 +62,7 @@ namespace SR {
 
       //if (paramIdx == 0) DBGMSG("Set: i: %i; Tp: %i; v: %f; V: %f; TV: %f\n", paramIdx, paramToSet->mType, value, paramToSet->mValue, paramToSet->mTargetValue);
     }
-    // Set floating value at index
+
     void SRParam::SetFloat(int paramIdx, float value, bool smooth) {
     Param* paramToSet = mParams.Get(paramIdx);
     paramToSet->mTargetValue = (float)value;
@@ -73,31 +72,31 @@ namespace SR {
       //paramToSet->mValue = value;
 
     }
-    // Set integer value at index
+
     void SRParam::SetInt(int paramIdx, int value) {
     Param* paramToSet = mParams.Get(paramIdx);
     paramToSet->mValue = value;
       if (paramToSet->mType != EType::kInt) paramToSet->mType = EType::kInt;
     }
-    // Set boolean value at index
+
     void SRParam::SetBool(int paramIdx, bool value) {
     Param* paramToSet = mParams.Get(paramIdx);
     paramToSet->mValue = value;
       if (paramToSet->mType != EType::kBool) paramToSet->mType = EType::kBool;
     }
 
-    double SRParam::GetDouble(int paramIdx) {
-      //if (paramIdx == 0) DBGMSG("Get: i: %i; Tp: %i; V: %f; TV: %f\n", paramIdx, mParams.Get(paramIdx)->mType, std::get<double>(mParams.Get(paramIdx)->mValue), std::get<double>(mParams.Get(paramIdx)->mTargetValue));
-      return std::get<double>(mParams.Get(paramIdx)->mValue);
-    } // Get double value at index
+    double SRParam::GetDouble(int paramIdx) { return std::get<double>(mParams.Get(paramIdx)->mValue); } // Get double value at index
     float SRParam::GetFloat(int paramIdx) { return std::get<float>(mParams.Get(paramIdx)->mValue); } // Get floating value at index
     int SRParam::GetInt(int paramIdx) { return std::get<int>(mParams.Get(paramIdx)->mValue); } // Get integer value at index
     bool SRParam::GetBool(int paramIdx) { return std::get<bool>(mParams.Get(paramIdx)->mValue); } // Get boolean value at index
 
-    // Set if a parameter is smoothed. Set smoothSamples = 0 to unable.
     void SRParam::SetSmoothing(int paramIdx, bool smoothing)
     {
       mParams.Get(paramIdx)->mSmooth = (mNumSmoothSamples > 0) ? smoothing : false;
+    }
+
+    void SRParam::SetGlobalNumSmoothSamples(int samples) {
+      mNumSmoothSamples = samples;
     }
 
     bool SRParam::IsCurrentlySmoothing(int paramIdx) {
