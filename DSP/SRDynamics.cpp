@@ -126,8 +126,7 @@ namespace SR {
       setSampleRate(samplerate);
       setKnee(kneeDb);
       setTopologyFeedback(feedback);
-      fSidechainFilter1.setFilter(SRFiltersTwoPole::FilterType::biquad_highpass, sidechainFc, 0.7071, 0., samplerate);
-      fSidechainFilter2.setFilter(SRFiltersTwoPole::FilterType::biquad_highpass, sidechainFc, 0.7071, 0., samplerate);
+      fSidechainFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFc, 0.7071, 0., samplerate);
     }
 
     //-------------------------------------------------------------
@@ -151,15 +150,13 @@ namespace SR {
 
     void SRCompressor::initSidechainFilter(double sidechainFc) {
       this->mSidechainFc = sidechainFc;
-      fSidechainFilter1.setFilter(SRFiltersTwoPole::FilterType::biquad_highpass, mSidechainFc, 0.7071, 0., getSampleRate());
-      fSidechainFilter2.setFilter(SRFiltersTwoPole::FilterType::biquad_highpass, mSidechainFc, 0.7071, 0., getSampleRate());
+      fSidechainFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadHighpass, mSidechainFc, 0.7071, 0., getSampleRate());
     }
 
     void SRCompressor::setSidechainFilterFreq(double sidechainFc)
     {
       this->mSidechainFc = sidechainFc;
-      fSidechainFilter1.setFc(mSidechainFc);
-      fSidechainFilter2.setFc(mSidechainFc);
+      fSidechainFilter.SetFreq(mSidechainFc);
     }
 
     void SRCompressor::setTopologyFeedback(bool feedback)
@@ -192,8 +189,7 @@ namespace SR {
       setKnee(kneeDb);
       setTopologyFeedback(feedback);
       mEnvelopeDetectorAverager.setTc(rmsWindowMs);
-      fSidechainFilter1.setFilter(SRFiltersTwoPole::FilterType::biquad_highpass, sidechainFc, 0.7071, 0., samplerate);
-      fSidechainFilter2.setFilter(SRFiltersTwoPole::FilterType::biquad_highpass, sidechainFc, 0.7071, 0., samplerate);
+      fSidechainFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFc, 0.7071, 0., samplerate);
     }
 
     //-------------------------------------------------------------
@@ -351,15 +347,17 @@ namespace SR {
       , mGrLin(1.0)
       , mGrDb(0.0)
       , mKneeWidthDb(0.0)
+      //, fSidechainBandpass(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, 0.5, 0.707, 0.0, 44100.0)
+      //, fDynamicEqFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, 0.5, 0.707, 0.0, 44100.0)
     {
     }
 
-    void SRDeesser::setDeesser(double threshDb, double ratio, double attackMs, double releaseMs, double freqNormalized, double q, double kneeDb, double samplerate) {
+    void SRDeesser::setDeesser(double threshDb, double ratio, double attackMs, double releaseMs, double normalizedFreq, double q, double kneeDb, double samplerate) {
       setThresh(threshDb);
       setRatio(ratio);
       setAttack(attackMs);
       setRelease(releaseMs);
-      initFilter(freqNormalized, q);
+      initFilter(normalizedFreq, q);
       setSampleRate(samplerate);
       setKnee(kneeDb);
     }
@@ -384,30 +382,24 @@ namespace SR {
 
     void SRDeesser::initFilter(double freq, double q)
     {
-      this->mFilterFreq = freq;
-      this->mFilterQ = q;
-      this->fSidechainBandpass1.setFilter(SRFiltersTwoPole::FilterType::biquad_bandpass, mFilterFreq, mFilterQ, 0.0, getSampleRate());
-      this->fSidechainBandpass2.setFilter(SRFiltersTwoPole::FilterType::biquad_bandpass, mFilterFreq, mFilterQ, 0.0, getSampleRate());
-      this->fDynamicEqFilter1.setFilter(SRFiltersTwoPole::FilterType::biquad_peak, mFilterFreq, mFilterQ, 0.0, getSampleRate());
-      this->fDynamicEqFilter2.setFilter(SRFiltersTwoPole::FilterType::biquad_peak, mFilterFreq, mFilterQ, 0.0, getSampleRate());
+      mFilterFreq = freq;
+      mFilterQ = q;
+      fSidechainBandpass.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, mFilterFreq, mFilterQ, 0.0, getSampleRate());
+      fDynamicEqFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, mFilterFreq, mFilterQ, 0.0, getSampleRate());
     }
 
     void SRDeesser::setFrequency(double freq)
     {
-      this->mFilterFreq = freq;
-      this->fSidechainBandpass1.setFc(mFilterFreq);
-      this->fSidechainBandpass2.setFc(mFilterFreq);
-      this->fDynamicEqFilter1.setFc(mFilterFreq);
-      this->fDynamicEqFilter2.setFc(mFilterFreq);
+      mFilterFreq = freq;
+      fSidechainBandpass.SetFreq(mFilterFreq);
+      fDynamicEqFilter.SetFreq(mFilterFreq);
     }
 
     void SRDeesser::setQ(double q)
     {
-      this->mFilterQ = q;
-      this->fSidechainBandpass1.setQ(mFilterQ);
-      this->fSidechainBandpass2.setQ(mFilterQ);
-      this->fDynamicEqFilter1.setQ(mFilterQ);
-      this->fDynamicEqFilter2.setQ(mFilterQ);
+      mFilterQ = q;
+      fSidechainBandpass.SetQ(q);
+      fDynamicEqFilter.SetQ(q);
     }
 
     //-------------------------------------------------------------

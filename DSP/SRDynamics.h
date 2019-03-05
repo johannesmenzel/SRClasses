@@ -42,7 +42,7 @@
 #include <cassert>				// for assert()
 #include <cmath>
 #include <vector>
-#include "SRFilters.h"
+#include "SRFilters.h"    // for deesser filters and compressor emphasis filters
 #include "../Utils/SRHelpers.h"
 
 
@@ -65,10 +65,7 @@ namespace SR {
 		class EnvelopeDetector
 		{
 		public:
-			EnvelopeDetector(
-				double ms = 1.0
-				, double sampleRate = 44100.0
-			);
+			EnvelopeDetector(double ms = 1.0, double sampleRate = 44100.0);
 			virtual ~EnvelopeDetector() {}
 
 			// time constant
@@ -183,7 +180,7 @@ namespace SR {
 			void process(double &in1, double &in2, double &extSC1, double &extSC2); // if eternal sidechain
 			void process(double &in1, double &in2, double sidechain);	// with stereo-linked key in
 		protected:
-			SRFiltersTwoPole fSidechainFilter1, fSidechainFilter2;
+			SRFiltersIIR<double, 2> fSidechainFilter;
 		// private:
 
 			// transfer function
@@ -257,8 +254,8 @@ namespace SR {
 			double rectifiedInput2 = extSC2;
 			// create sidechain
 			if (mSidechainFc > 16. / getSampleRate()) {
-				rectifiedInput1 = fSidechainFilter1.process(rectifiedInput1);
-				rectifiedInput2 = fSidechainFilter2.process(rectifiedInput2);
+				rectifiedInput1 = fSidechainFilter.Process(rectifiedInput1, 0);
+				rectifiedInput2 = fSidechainFilter.Process(rectifiedInput2, 1);
 			}
 
 			rectifiedInput1 = fabs(rectifiedInput1);	// rectify input
@@ -279,8 +276,8 @@ namespace SR {
 			double rectifiedInput2 = (mTopologyFeedback = false) ? in2 : sidechainSignal2;
 			// create sidechain
 			if (mSidechainFc > 16. / getSampleRate()) {
-				rectifiedInput1 = fSidechainFilter1.process(rectifiedInput1);
-				rectifiedInput2 = fSidechainFilter2.process(rectifiedInput2);
+				rectifiedInput1 = fSidechainFilter.Process(rectifiedInput1, 0);
+				rectifiedInput2 = fSidechainFilter.Process(rectifiedInput2, 1);
 			}
 			rectifiedInput1 = fabs(rectifiedInput1);	// rectify input
 			rectifiedInput2 = fabs(rectifiedInput2);
@@ -746,13 +743,14 @@ namespace SR {
 			virtual ~SRDeesser() {}
 
 			// parameters
-			virtual void setDeesser(double threshDb, double ratio, double attackMs, double releaseMs, double freqNormalized, double q, double kneeDb, double samplerate);
+			virtual void setDeesser(double threshDb, double ratio, double attackMs, double releaseMs, double normalizedFreq, double q, double kneeDb, double samplerate);
 			virtual void setThresh(double dB);
 			virtual void setRatio(double dB);
 			virtual void setKnee(double kneeDb);
-			virtual void initFilter(double freq, double q);
 			virtual void setFrequency(double freq);
 			virtual void setQ(double q);
+			virtual void initFilter(double freq, double q);
+
 
 			virtual double getThresh(void) const { return mThreshDb; }
 			virtual double getRatio(void) const { return mRatio; }
@@ -764,7 +762,7 @@ namespace SR {
 			// call before runtime (in resume())
 			void process(double &in1, double &in2); // compressor runtime process if internal sidechain 
 			void process(double &in1, double &in2, double sidechain);	// with stereo-linked key in
-			SRFiltersTwoPole fSidechainBandpass1, fSidechainBandpass2, fDynamicEqFilter1, fDynamicEqFilter2;
+			SRFiltersIIR<double, 2> fSidechainBandpass, fDynamicEqFilter;
 
 		private:
 
@@ -792,8 +790,8 @@ namespace SR {
 			double rectifiedInput1 = in1;
 			double rectifiedInput2 = in2;
 			// create sidechain
-			rectifiedInput1 = fSidechainBandpass1.process(rectifiedInput1);
-			rectifiedInput2 = fSidechainBandpass2.process(rectifiedInput2);
+			rectifiedInput1 = fSidechainBandpass.Process(rectifiedInput1, 0);
+			rectifiedInput2 = fSidechainBandpass.Process(rectifiedInput2, 1);
 
 
 			rectifiedInput1 = fabs(rectifiedInput1);	// rectify input
@@ -855,10 +853,9 @@ namespace SR {
 
 			mGrDb = grRaw;
 			mGrLin = SR::Utils::DBToAmp(grRaw);
-			fDynamicEqFilter1.setPeakGain(grRaw);
-			fDynamicEqFilter2.setPeakGain(grRaw);
-			in1 = fDynamicEqFilter1.process(in1);
-			in2 = fDynamicEqFilter2.process(in2);
+			fDynamicEqFilter.SetPeakGain(grRaw);
+			in1 = fDynamicEqFilter.Process(in1, 0);
+			in2 = fDynamicEqFilter.Process(in2, 1);
 		}
 		//-------------------------------------------------------------
 		// End SRDeesser Inline Functions

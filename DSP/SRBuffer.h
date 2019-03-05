@@ -269,8 +269,8 @@ namespace SR {
 #elif BUFFERIMPL == 3 // T**
           sum += (T)mBuffer[channel][s];
 #endif
-          return sum;
         }
+        return sum;
       }
 
       // Calculate average of all data of all channels
