@@ -62,7 +62,7 @@ namespace SR {
       }
 
       void SetFreqCPS(double freqCPS) { mNewState.freq = Clip(freqCPS, 10, 20000.); }
-      void SetQ(double Q) { mNewState.Q = Clip(Q, 0.1, 100.); }
+      void SetQ(double q) { mNewState.q = Clip(Q, 0.1, 100.); }
       void SetGain(double gainDB) { mNewState.gain = Clip(gainDB, -36, 36.); }
       void SetMode(EFilterType mode) { mNewState.mode = mode; }
       void SetSampleRate(double sampleRate) { mNewState.sampleRate = sampleRate; }
@@ -89,13 +89,13 @@ namespace SR {
       {
         EFilterType mode;
         double freq = 1000.;
-        double Q = 0.1;
+        double q = 0.1;
         double gain = 1.;
         double sampleRate = 44100.;
 
         bool operator != (const Settings &other) const
         {
-          return !(mode == other.mode && freq == other.freq && Q == other.Q && gain == other.gain && sampleRate == other.sampleRate);
+          return !(mode == other.mode && freq == other.freq && q == other.q && gain == other.gain && sampleRate == other.sampleRate);
         }
       };
 
@@ -152,15 +152,15 @@ namespace SR {
 
       SRFiltersIIR();
 
-      SRFiltersIIR(EFilterType type, double Fc, double Q, double peakGainDB, double samplerate); // Two pole filters
+      SRFiltersIIR(EFilterType type, double frequency, double q, double peakGainDB, double samplerate); // Two pole filters
       ~SRFiltersIIR();
 
       // Setter methods
       void SetType(EFilterType type); // Set filter type
-      void SetQ(double Q); // Set filter Q
-      void SetFreq(double Fc); // Set filter center frequency
+      void SetQ(double q); // Set filter Q
+      void SetFreq(double frequency); // Set filter center frequency
       void SetPeakGain(double peakGainDB); // Set filter peak gain
-      void SetFilter(EFilterType type, double Fc, double Q, double peakGain, double samplerate); // Set all filter members at once
+      void SetFilter(EFilterType type, double frequency, double q, double peakGain, double samplerate); // Set all filter members at once
 
       // Process methods
       T Process(T in, int channel); // Process one sample
@@ -224,11 +224,11 @@ namespace SR {
     class SRFiltersOnePole {
     public:
       SRFiltersOnePole();
-      SRFiltersOnePole(int type, double Fc, double samplerate);
-      void SetFilter(int type, double Fc, double samplerate);
+      SRFiltersOnePole(int type, double frequency, double samplerate);
+      void SetFilter(int type, double frequency, double samplerate);
       void SetType(int type);
       ~SRFiltersOnePole();
-      void SetFreq(double Fc);
+      void SetFreq(double frequency);
       void Update(void);
       T Process(T in);
 
@@ -292,7 +292,7 @@ namespace SR {
       case kLowPass:
       {
         const double g = w;
-        const double k = 1. / mState.Q;
+        const double k = 1. / mState.q;
         m_a1 = 1. / (1. + g * (g + k));
         m_a2 = g * m_a1;
         m_a3 = g * m_a2;
@@ -304,7 +304,7 @@ namespace SR {
       case kHighPass:
       {
         const double g = w;
-        const double k = 1. / mState.Q;
+        const double k = 1. / mState.q;
         m_a1 = 1. / (1. + g * (g + k));
         m_a2 = g * m_a1;
         m_a3 = g * m_a2;
@@ -316,7 +316,7 @@ namespace SR {
       case kBandPass:
       {
         const double g = w;
-        const double k = 1. / mState.Q;
+        const double k = 1. / mState.q;
         m_a1 = 1. / (1. + g * (g + k));
         m_a2 = g * m_a1;
         m_a3 = g * m_a2;
@@ -328,7 +328,7 @@ namespace SR {
       case kNotch:
       {
         const double g = w;
-        const double k = 1. / mState.Q;
+        const double k = 1. / mState.q;
         m_a1 = 1. / (1. + g * (g + k));
         m_a2 = g * m_a1;
         m_a3 = g * m_a2;
@@ -340,7 +340,7 @@ namespace SR {
       case kPeak:
       {
         const double g = w;
-        const double k = 1. / mState.Q;
+        const double k = 1. / mState.q;
         m_a1 = 1. / (1. + g * (g + k));
         m_a2 = g * m_a1;
         m_a3 = g * m_a2;
@@ -353,7 +353,7 @@ namespace SR {
       {
         const double A = std::pow(10., mState.gain / 40.);
         const double g = w;
-        const double k = 1 / mState.Q;
+        const double k = 1 / mState.q;
         m_a1 = 1. / (1. + g * (g + k));
         m_a2 = g * m_a1;
         m_a3 = g * m_a2;
@@ -366,7 +366,7 @@ namespace SR {
       {
         const double A = std::pow(10., mState.gain / 40.);
         const double g = w / std::sqrt(A);
-        const double k = 1. / mState.Q;
+        const double k = 1. / mState.q;
         m_a1 = 1. / (1. + g * (g + k));
         m_a2 = g * m_a1;
         m_a3 = g * m_a2;
@@ -379,7 +379,7 @@ namespace SR {
       {
         const double A = std::pow(10., mState.gain / 40.);
         const double g = w / std::sqrt(A);
-        const double k = 1. / mState.Q;
+        const double k = 1. / mState.q;
         m_a1 = 1. / (1. + g * (g + k));
         m_a2 = g * m_a1;
         m_a3 = g * m_a2;
@@ -426,8 +426,8 @@ namespace SR {
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    SRFiltersIIR<T, MAXNUMCHANNELS>::SRFiltersIIR(EFilterType type, double Fc, double Q, double peakGainDB, double samplerate) {
-      SetFilter(type, Fc, Q, peakGainDB, samplerate);
+    SRFiltersIIR<T, MAXNUMCHANNELS>::SRFiltersIIR(EFilterType type, double frequency, double q, double peakGainDB, double samplerate) {
+      SetFilter(type, frequency, q, peakGainDB, samplerate);
       z1 = z2 = 0.0;
     }
 
@@ -443,14 +443,14 @@ namespace SR {
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetQ(double Q) {
-      mQ = Q;
+    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetQ(double q) {
+      mQ = q;
       Update();
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetFreq(double Fc) {
-      mFreq = Fc;
+    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetFreq(double frequency) {
+      mFreq = frequency;
       Update();
     }
 
@@ -504,10 +504,10 @@ namespace SR {
 
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetFilter(EFilterType type, double Fc, double Q, double peakGainDB, double samplerate) {
+    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetFilter(EFilterType type, double frequency, double q, double peakGainDB, double samplerate) {
       mType = type;
-      mQ = Q;
-      mFreq = Fc;
+      mQ = q;
+      mFreq = frequency;
       mSamplerate = samplerate;
       mPeakGain = peakGainDB;
       mPoles = (type >= EFilterType::OnepoleHighpass) ? 1 : 2;
@@ -691,11 +691,11 @@ namespace SR {
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    SRFiltersOnePole<T, MAXNUMCHANNELS>::SRFiltersOnePole(int type, double Fc, double samplerate) {
-      SetFilter(type, Fc, samplerate);
+    SRFiltersOnePole<T, MAXNUMCHANNELS>::SRFiltersOnePole(int type, double frequency, double samplerate) {
+      SetFilter(type, frequency, samplerate);
       z1 = 0.0;
       SetType(type);
-      SetFreq(Fc);
+      SetFreq(frequency);
     }
 
     template<typename T, int MAXNUMCHANNELS>
@@ -703,9 +703,9 @@ namespace SR {
     {
     }
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersOnePole<T, MAXNUMCHANNELS>::SetFilter(int type, double Fc, double samplerate) {
+    void SRFiltersOnePole<T, MAXNUMCHANNELS>::SetFilter(int type, double frequency, double samplerate) {
       this->mType = type;
-      this->mFreq = Fc;
+      this->mFreq = frequency;
       this->mSamplerate = samplerate;
     }
 
@@ -716,8 +716,8 @@ namespace SR {
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersOnePole<T, MAXNUMCHANNELS>::SetFreq(double Fc) {
-      this->mFreq = Fc;
+    void SRFiltersOnePole<T, MAXNUMCHANNELS>::SetFreq(double frequency) {
+      this->mFreq = frequency;
       Update();
     }
 

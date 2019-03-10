@@ -99,26 +99,63 @@ namespace SR {
 
 
     //-------------------------------------------------------------
-    // simple compressor
+    // dynamics base class
+    //-------------------------------------------------------------
+    SRDynamicsBase::SRDynamicsBase(double threshDb, double ratio)
+      : mThreshDb(threshDb)
+      , mThreshLin(Utils::DBToAmp(threshDb))
+      , mRatio(ratio)
+      , mKneeWidthDb(0.0)
+      , mGrDb(0.0)
+      , mGrLin(1.0)
+      , currentOvershootDb(DC_OFFSET)
+      , currentOvershootLin(SR::Utils::DBToAmp(DC_OFFSET))
+      , mAverageOfSquares(DC_OFFSET)
+    {
+    }
+
+    void SRDynamicsBase::setThresh(double threshDb)
+    {
+      mThreshDb = threshDb;
+      mThreshLin = SR::Utils::DBToAmp(threshDb);
+    }
+
+    void SRDynamicsBase::setRatio(double ratio)
+    {
+      assert(ratio >= 0.0);
+      mRatio = ratio;
+      //mMaxGr = 73.4979484210802 - 88.939188010773 * (1 - exp(-1.75091102973106 * (1 / ratio)));
+    }
+
+    void SRDynamicsBase::setKnee(double kneeDb)
+    {
+      this->mKneeWidthDb = kneeDb;
+    }
+
+    void SRDynamicsBase::Reset(void)
+    {
+      this->currentOvershootDb = DC_OFFSET;
+      this->currentOvershootLin = SR::Utils::DBToAmp(DC_OFFSET);
+      this->mAverageOfSquares = DC_OFFSET;
+    }
+
+
+    //-------------------------------------------------------------
+    // SRCompressor methods
     //-------------------------------------------------------------
     SRCompressor::SRCompressor()
       : AttRelEnvelope(10.0, 100.0)
-      , mThreshDb(0.0)
-      , mRatio(1.0)
-      , currentOvershootDb(DC_OFFSET)
+      , SRDynamicsBase(0.0, 1.0)
       , mSidechainFc(0.0)
-      , mGrLin(1.0)
-      , mGrDb(0.0)
       , mTopologyFeedback(false)
-      , mKneeWidthDb(0.0)
       , mMaxGr(0.0)
       , sidechainSignal1(0.0)
       , sidechainSignal2(0.0)
     {
     }
 
-    void SRCompressor::initCompressor(double dB, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, bool feedback, double samplerate) {
-      setThresh(dB);
+    void SRCompressor::initCompressor(double threshDb, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, bool feedback, double samplerate) {
+      setThresh(threshDb);
       setRatio(ratio);
       setAttack(attackMs);
       setRelease(releaseMs);
@@ -129,23 +166,8 @@ namespace SR {
       fSidechainFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFc, 0.7071, 0., samplerate);
     }
 
-    //-------------------------------------------------------------
-    void SRCompressor::setThresh(double dB)
-    {
-      mThreshDb = dB;
-    }
-
-    //-------------------------------------------------------------
-    void SRCompressor::setRatio(double ratio)
-    {
-      assert(ratio >= 0.0);
-      mRatio = ratio;
-      mMaxGr = 73.4979484210802 - 88.939188010773 * (1 - exp(-1.75091102973106 * (1 / ratio)));
-    }
-
-    void SRCompressor::setKnee(double kneeDb)
-    {
-      this->mKneeWidthDb = kneeDb;
+    void SRCompressor::SetMaxGrDb(double maxGrDb) {
+      this->mMaxGr = maxGrDb;
     }
 
     void SRCompressor::initSidechainFilter(double sidechainFc) {
@@ -153,29 +175,22 @@ namespace SR {
       fSidechainFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadHighpass, mSidechainFc, 0.7071, 0., getSampleRate());
     }
 
-    void SRCompressor::setSidechainFilterFreq(double sidechainFc)
-    {
+    void SRCompressor::setSidechainFilterFreq(double sidechainFc) {
       this->mSidechainFc = sidechainFc;
       fSidechainFilter.SetFreq(mSidechainFc);
     }
 
-    void SRCompressor::setTopologyFeedback(bool feedback)
-    {
+    void SRCompressor::setTopologyFeedback(bool feedback) {
       this->mTopologyFeedback = feedback;
     }
 
-    //-------------------------------------------------------------
-    void SRCompressor::initRuntime(void)
-    {
-      this->currentOvershootDb = DC_OFFSET;
-    }
+
 
     //-------------------------------------------------------------
     // simple compressor with RMS detection
     //-------------------------------------------------------------
     SRCompressorRMS::SRCompressorRMS()
       : mEnvelopeDetectorAverager(5.0)
-      , mAverageOfSquares(DC_OFFSET)
     {
     }
 
@@ -205,23 +220,16 @@ namespace SR {
       mEnvelopeDetectorAverager.setTc(ms);
     }
 
-    //-------------------------------------------------------------
-    void SRCompressorRMS::initRuntime(void)
-    {
-      SRCompressor::initRuntime();
-      mAverageOfSquares = DC_OFFSET;
-    }
+
 
     //-------------------------------------------------------------
     SRLimiter::SRLimiter()
-      : mThreshDb(0.0)
-      , mThreshLin(1.0)
+      : SRDynamicsBase(0.0, 1.0)
       , mPeakHoldSamples(0)
       , mPeakHoldTimer(0)
       , mMaxPeak(1.0)
       , mEnvelopeDetectorAttack(1.0)
       , mEnvelopeDetectorRelease(10.0)
-      , currentOvershootLin(1.0)
       , mBufferMask(BUFFER_SIZE - 1)
       , mCursor(0)
     {
@@ -230,12 +238,6 @@ namespace SR {
       mOutputBuffer[1].resize(BUFFER_SIZE, 0.0);
     }
 
-    //-------------------------------------------------------------
-    void SRLimiter::setThresh(double dB)
-    {
-      mThreshDb = dB;
-      mThreshLin = SR::Utils::DBToAmp(dB);
-    }
 
     //-------------------------------------------------------------
     void SRLimiter::setAttack(double ms)
@@ -262,7 +264,7 @@ namespace SR {
     }
 
     //-------------------------------------------------------------
-    void SRLimiter::initRuntime(void)
+    void SRLimiter::Reset(void)
     {
       mPeakHoldTimer = 0;
       mMaxPeak = mThreshLin;
@@ -284,23 +286,8 @@ namespace SR {
     //-------------------------------------------------------------
     SRGate::SRGate()
       : AttRelEnvelope(1.0, 100.0)
-      , mThreshDb(0.0)
-      , mThreshLin(1.0)
-      , currentOvershootLin(DC_OFFSET)
+      , SRDynamicsBase(0.0, 1.0)
     {
-    }
-
-    //-------------------------------------------------------------
-    void SRGate::setThresh(double dB)
-    {
-      mThreshDb = dB;
-      mThreshLin = SR::Utils::DBToAmp(dB);
-    }
-
-    //-------------------------------------------------------------
-    void SRGate::initRuntime(void)
-    {
-      currentOvershootLin = DC_OFFSET;
     }
 
     //-------------------------------------------------------------
@@ -308,7 +295,6 @@ namespace SR {
     //-------------------------------------------------------------
     SRGateRms::SRGateRms()
       : mEnvelopeDetectorAverager(5.0)
-      , mAverageOfSquares(DC_OFFSET)
     {
     }
 
@@ -325,28 +311,16 @@ namespace SR {
       mEnvelopeDetectorAverager.setTc(ms);
     }
 
-    //-------------------------------------------------------------
-    void SRGateRms::initRuntime(void)
-    {
-      SRGate::initRuntime();
-      mAverageOfSquares = DC_OFFSET;
-    }
-
 
     //-------------------------------------------------------------
     // DEESSER
     //-------------------------------------------------------------
     SRDeesser::SRDeesser()
       : AttRelEnvelope(10.0, 100.0)
-      , mThreshDb(0.0)
-      , mRatio(1.0)
-      , currentOvershootDb(DC_OFFSET)
+      , SRDynamicsBase(0.0, 1.0)
       , mFilterFreq(0.5)
       , mFilterQ(0.707)
       , mFilterGain(0.0)
-      , mGrLin(1.0)
-      , mGrDb(0.0)
-      , mKneeWidthDb(0.0)
       //, fSidechainBandpass(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, 0.5, 0.707, 0.0, 44100.0)
       //, fDynamicEqFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, 0.5, 0.707, 0.0, 44100.0)
     {
@@ -357,56 +331,28 @@ namespace SR {
       setRatio(ratio);
       setAttack(attackMs);
       setRelease(releaseMs);
-      initFilter(normalizedFreq, q);
       setSampleRate(samplerate);
+      initFilter(normalizedFreq, q);
       setKnee(kneeDb);
     }
 
-    //-------------------------------------------------------------
-    void SRDeesser::setThresh(double dB)
-    {
-      mThreshDb = dB;
-    }
-
-    //-------------------------------------------------------------
-    void SRDeesser::setRatio(double ratio)
-    {
-      assert(ratio >= 0.0);
-      mRatio = ratio;
-    }
-
-    void SRDeesser::setKnee(double kneeDb)
-    {
-      mKneeWidthDb = kneeDb;
-    }
-
-    void SRDeesser::initFilter(double freq, double q)
-    {
+    void SRDeesser::initFilter(double freq, double q) {
       mFilterFreq = freq;
       mFilterQ = q;
       fSidechainBandpass.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, mFilterFreq, mFilterQ, 0.0, getSampleRate());
       fDynamicEqFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, mFilterFreq, mFilterQ, 0.0, getSampleRate());
     }
 
-    void SRDeesser::setFrequency(double freq)
-    {
+    void SRDeesser::setFrequency(double freq) {
       mFilterFreq = freq;
       fSidechainBandpass.SetFreq(mFilterFreq);
       fDynamicEqFilter.SetFreq(mFilterFreq);
     }
 
-    void SRDeesser::setQ(double q)
-    {
+    void SRDeesser::setQ(double q) {
       mFilterQ = q;
       fSidechainBandpass.SetQ(q);
       fDynamicEqFilter.SetQ(q);
     }
-
-    //-------------------------------------------------------------
-    void SRDeesser::initRuntime(void)
-    {
-      currentOvershootDb = DC_OFFSET;
-    }
-
   }
 } // end namespace
