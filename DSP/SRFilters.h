@@ -428,7 +428,9 @@ namespace SR {
     template<typename T, int MAXNUMCHANNELS>
     SRFiltersIIR<T, MAXNUMCHANNELS>::SRFiltersIIR(EFilterType type, double frequency, double q, double peakGainDB, double samplerate) {
       SetFilter(type, frequency, q, peakGainDB, samplerate);
-      z1 = z2 = 0.0;
+      for (int i = 0; i < MAXNUMCHANNELS; i++) {
+        z1[i] = z2[i] = 0.0;
+      }
     }
 
     template<typename T, int MAXNUMCHANNELS>

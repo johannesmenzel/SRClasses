@@ -30,11 +30,7 @@ namespace SR {
     // DSP
     // ---
 
-    // Compressor auto makeup calculation
-    // SHOULD BE MOVED TO SRDYNAMICS CLASS
-    inline double calcAutoMakeup(double threshDb, double ratio, double referenceDb, double attackMs, double releaseMs) {
-      return	1. + (1. / (DBToAmp(((ratio - 1.) * -threshDb) / 2)) - 1.) * sqrt(threshDb / referenceDb) * (sqrt(30.) / sqrt(attackMs)) * (sqrt(releaseMs) / sqrt(5000.));
-    }
+
 
     // tanh
     inline double fast_tanh(double x) {
