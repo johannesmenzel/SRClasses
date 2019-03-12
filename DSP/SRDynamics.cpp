@@ -33,7 +33,7 @@ namespace SR {
   namespace DSP {
 
     //-------------------------------------------------------------
-    // envelope detector
+    // Envelope detector
     //-------------------------------------------------------------
     EnvelopeDetector::EnvelopeDetector(double ms, double sampleRate)
     {
@@ -44,32 +44,25 @@ namespace SR {
       setCoef();
     }
 
-
-
-    //-------------------------------------------------------------
-    void EnvelopeDetector::setTc(double ms)
-    {
+    void EnvelopeDetector::setTc(double ms) {
       assert(ms > 0.0);
       mTimeConstantMs = (ms > 1000. / mSampleRate) ? ms : 1000. / mSampleRate;
       setCoef();
     }
 
-    //-------------------------------------------------------------
-    void EnvelopeDetector::setSampleRate(double sampleRate)
-    {
+    void EnvelopeDetector::setSampleRate(double sampleRate) {
       assert(sampleRate > 0.0);
       mSampleRate = sampleRate;
       setCoef();
     }
 
-    //-------------------------------------------------------------
-    void EnvelopeDetector::setCoef(void)
-    {
+    void EnvelopeDetector::setCoef(void) {
       mRuntimeCoeff = exp(-1000.0 / (mTimeConstantMs * mSampleRate));
     }
 
+
     //-------------------------------------------------------------
-    // attack/release envelope
+    // Attack/release envelope
     //-------------------------------------------------------------
     AttRelEnvelope::AttRelEnvelope(double att_ms, double rel_ms, double sampleRate)
       : mEnvelopeDetectorAttack(att_ms, sampleRate)
@@ -77,66 +70,70 @@ namespace SR {
     {
     }
 
-    //-------------------------------------------------------------
-    void AttRelEnvelope::setAttack(double ms)
-    {
+    void AttRelEnvelope::SetAttack(double ms) {
       mEnvelopeDetectorAttack.setTc(ms);
     }
 
-    //-------------------------------------------------------------
-    void AttRelEnvelope::setRelease(double ms)
-    {
+    void AttRelEnvelope::SetRelease(double ms) {
       mEnvelopeDetectorRelease.setTc(ms);
     }
 
-    //-------------------------------------------------------------
-    void AttRelEnvelope::setSampleRate(double sampleRate)
-    {
+    void AttRelEnvelope::SetSampleRate(double sampleRate) {
       mEnvelopeDetectorAttack.setSampleRate(sampleRate);
       mEnvelopeDetectorRelease.setSampleRate(sampleRate);
     }
 
 
-
     //-------------------------------------------------------------
-    // dynamics base class
+    // SRDynamicsBase methods
     //-------------------------------------------------------------
-    SRDynamicsBase::SRDynamicsBase(double threshDb, double ratio)
+    SRDynamicsBase::SRDynamicsBase(double threshDb, double ratio, bool autoMakeup)
       : mThreshDb(threshDb)
       , mThreshLin(Utils::DBToAmp(threshDb))
       , mRatio(ratio)
+      , mMakeup(1.0)
       , mKneeWidthDb(0.0)
       , mGrDb(0.0)
       , mGrLin(1.0)
       , currentOvershootDb(DC_OFFSET)
       , currentOvershootLin(SR::Utils::DBToAmp(DC_OFFSET))
       , mAverageOfSquares(DC_OFFSET)
+      , mIsAutoMakeup(autoMakeup)
+      , mAutoMakeup(1.0)
     {
     }
 
-    void SRDynamicsBase::setThresh(double threshDb)
-    {
+    void SRDynamicsBase::SetThresh(double threshDb) {
       mThreshDb = threshDb;
       mThreshLin = SR::Utils::DBToAmp(threshDb);
+      if (mIsAutoMakeup)
+        mAutoMakeup = AutoMakeup(mThreshDb, mRatio);
     }
 
-    void SRDynamicsBase::setRatio(double ratio)
-    {
+    void SRDynamicsBase::SetRatio(double ratio) {
       assert(ratio >= 0.0);
       mRatio = ratio;
-      //mMaxGr = 73.4979484210802 - 88.939188010773 * (1 - exp(-1.75091102973106 * (1 / ratio)));
+      if (mIsAutoMakeup)
+        mAutoMakeup = AutoMakeup(mThreshDb, mRatio);
     }
 
-    void SRDynamicsBase::setKnee(double kneeDb)
-    {
-      this->mKneeWidthDb = kneeDb;
+    void SRDynamicsBase::SetMakeup(double makeupDb) {
+      mMakeup = SR::Utils::DBToAmp(makeupDb);
     }
 
-    void SRDynamicsBase::Reset(void)
-    {
-      this->currentOvershootDb = DC_OFFSET;
-      this->currentOvershootLin = SR::Utils::DBToAmp(DC_OFFSET);
-      this->mAverageOfSquares = DC_OFFSET;
+    void SRDynamicsBase::SetIsAutoMakeup(bool autoMakeup) {
+      mIsAutoMakeup = autoMakeup;
+    }
+
+    void SRDynamicsBase::SetKnee(double kneeDb) {
+      assert(kneeDb >= 0.0);
+      mKneeWidthDb = kneeDb;
+    }
+
+    void SRDynamicsBase::Reset(void) {
+      currentOvershootDb = DC_OFFSET;
+      currentOvershootLin = SR::Utils::DBToAmp(DC_OFFSET);
+      mAverageOfSquares = DC_OFFSET;
     }
 
 
@@ -154,74 +151,70 @@ namespace SR {
     {
     }
 
-    void SRCompressor::initCompressor(double threshDb, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, bool feedback, double samplerate) {
-      setThresh(threshDb);
-      setRatio(ratio);
-      setAttack(attackMs);
-      setRelease(releaseMs);
-      initSidechainFilter(sidechainFc);
-      setSampleRate(samplerate);
-      setKnee(kneeDb);
-      setTopologyFeedback(feedback);
-      fSidechainFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFc, 0.7071, 0., samplerate);
+    void SRCompressor::InitCompressor(double threshDb, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, bool isFeedbackCompressor, bool autoMakeup, double samplerate) {
+      AttRelEnvelope::SetSampleRate(samplerate);
+      SRDynamicsBase::SetThresh(threshDb);
+      SRDynamicsBase::SetRatio(ratio);
+      SRDynamicsBase::SetIsAutoMakeup(autoMakeup);
+      AttRelEnvelope::SetAttack(attackMs);
+      AttRelEnvelope::SetRelease(releaseMs);
+      InitSidechainFilter(sidechainFc);
+      SRDynamicsBase::SetKnee(kneeDb);
+      SetTopologyFeedback(isFeedbackCompressor);
     }
 
     void SRCompressor::SetMaxGrDb(double maxGrDb) {
-      this->mMaxGr = maxGrDb;
+      mMaxGr = maxGrDb;
     }
 
-    void SRCompressor::initSidechainFilter(double sidechainFc) {
-      this->mSidechainFc = sidechainFc;
-      fSidechainFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadHighpass, mSidechainFc, 0.7071, 0., getSampleRate());
+    void SRCompressor::InitSidechainFilter(double sidechainFc) {
+      mSidechainFc = sidechainFc;
+      fSidechainFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFc, 0.7071, 0., AttRelEnvelope::GetSampleRate());
     }
 
-    void SRCompressor::setSidechainFilterFreq(double sidechainFc) {
-      this->mSidechainFc = sidechainFc;
+    void SRCompressor::SetSidechainFilterFreq(double sidechainFc) {
+      mSidechainFc = sidechainFc;
       fSidechainFilter.SetFreq(mSidechainFc);
     }
 
-    void SRCompressor::setTopologyFeedback(bool feedback) {
-      this->mTopologyFeedback = feedback;
+    void SRCompressor::SetTopologyFeedback(bool isFeedbackCompressor) {
+      mTopologyFeedback = isFeedbackCompressor;
     }
 
 
 
     //-------------------------------------------------------------
-    // simple compressor with RMS detection
+    // SRCompressorRMS methods
     //-------------------------------------------------------------
     SRCompressorRMS::SRCompressorRMS()
       : mEnvelopeDetectorAverager(5.0)
     {
     }
 
-    void SRCompressorRMS::initCompressor(double dB, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, double rmsWindowMs, bool feedback, double samplerate) {
-      setThresh(dB);
-      setRatio(ratio);
-      setAttack(attackMs);
-      setRelease(releaseMs);
-      initSidechainFilter(sidechainFc);
-      setSampleRate(samplerate);
-      setKnee(kneeDb);
-      setTopologyFeedback(feedback);
+    void SRCompressorRMS::InitCompressor(double dB, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, double rmsWindowMs, bool feedback, bool autoMakeup, double samplerate) {
+      SetSampleRate(samplerate);
+      SRDynamicsBase::SetThresh(dB);
+      SRDynamicsBase::SetRatio(ratio);
+      SRDynamicsBase::SetIsAutoMakeup(autoMakeup);
+      AttRelEnvelope::SetAttack(attackMs);
+      AttRelEnvelope::SetRelease(releaseMs);
+      SRCompressor::InitSidechainFilter(sidechainFc);
+      SRDynamicsBase::SetKnee(kneeDb);
+      SRCompressor::SetTopologyFeedback(feedback);
       mEnvelopeDetectorAverager.setTc(rmsWindowMs);
-      fSidechainFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFc, 0.7071, 0., samplerate);
     }
 
-    //-------------------------------------------------------------
-    void SRCompressorRMS::setSampleRate(double sampleRate)
-    {
-      SRCompressor::setSampleRate(sampleRate);
+    void SRCompressorRMS::SetSampleRate(double sampleRate) {
+      SRCompressor::SetSampleRate(sampleRate);
       mEnvelopeDetectorAverager.setSampleRate(sampleRate);
     }
 
-    //-------------------------------------------------------------
-    void SRCompressorRMS::setWindow(double ms)
-    {
+    void SRCompressorRMS::SetWindow(double ms) {
       mEnvelopeDetectorAverager.setTc(ms);
     }
 
-
-
+    //-------------------------------------------------------------
+    // SRLimiter Methods
     //-------------------------------------------------------------
     SRLimiter::SRLimiter()
       : SRDynamicsBase(0.0, 1.0)
@@ -233,15 +226,12 @@ namespace SR {
       , mBufferMask(BUFFER_SIZE - 1)
       , mCursor(0)
     {
-      setAttack(1.0);
+      SetAttack(1.0);
       mOutputBuffer[0].resize(BUFFER_SIZE, 0.0);
       mOutputBuffer[1].resize(BUFFER_SIZE, 0.0);
     }
 
-
-    //-------------------------------------------------------------
-    void SRLimiter::setAttack(double ms)
-    {
+    void SRLimiter::SetAttack(double ms) {
       unsigned int samp = int(0.001 * ms * mEnvelopeDetectorAttack.getSampleRate());
 
       assert(samp < BUFFER_SIZE);
@@ -250,22 +240,16 @@ namespace SR {
       mEnvelopeDetectorAttack.setTc(ms);
     }
 
-    //-------------------------------------------------------------
-    void SRLimiter::setRelease(double ms)
-    {
+    void SRLimiter::SetRelease(double ms) {
       mEnvelopeDetectorRelease.setTc(ms);
     }
 
-    //-------------------------------------------------------------
-    void SRLimiter::setSampleRate(double sampleRate)
-    {
+    void SRLimiter::SetSampleRate(double sampleRate) {
       mEnvelopeDetectorAttack.setSampleRate(sampleRate);
       mEnvelopeDetectorRelease.setSampleRate(sampleRate);
     }
 
-    //-------------------------------------------------------------
-    void SRLimiter::Reset(void)
-    {
+    void SRLimiter::Reset(void) {
       mPeakHoldTimer = 0;
       mMaxPeak = mThreshLin;
       currentOvershootLin = mThreshLin;
@@ -274,15 +258,13 @@ namespace SR {
       mOutputBuffer[1].assign(BUFFER_SIZE, 0.0);
     }
 
-    //-------------------------------------------------------------
-    void SRLimiter::FastEnvelope::setCoef(void)
-    {
-      // rises to 99% of in value over duration of time constant
-      mRuntimeCoeff = pow(0.01, (1000.0 / (mTimeConstantMs * mSampleRate)));
+    void SRLimiter::FastEnvelope::setCoef(void) {
+      mRuntimeCoeff = pow(0.01, (1000.0 / (mTimeConstantMs * mSampleRate))); // rises to 99% of in value over duration of time constant
     }
 
 
-
+    //-------------------------------------------------------------
+    // SRGate Methods
     //-------------------------------------------------------------
     SRGate::SRGate()
       : AttRelEnvelope(1.0, 100.0)
@@ -291,29 +273,25 @@ namespace SR {
     }
 
     //-------------------------------------------------------------
-    // simple gate with RMS detection
+    // SRGateRMS Methods
     //-------------------------------------------------------------
-    SRGateRms::SRGateRms()
+    SRGateRMS::SRGateRMS()
       : mEnvelopeDetectorAverager(5.0)
     {
     }
 
-    //-------------------------------------------------------------
-    void SRGateRms::setSampleRate(double sampleRate)
-    {
-      SRGate::setSampleRate(sampleRate);
+    void SRGateRMS::setSampleRate(double sampleRate) {
+      SRGate::SetSampleRate(sampleRate);
       mEnvelopeDetectorAverager.setSampleRate(sampleRate);
     }
 
-    //-------------------------------------------------------------
-    void SRGateRms::setWindow(double ms)
-    {
+    void SRGateRMS::setWindow(double ms) {
       mEnvelopeDetectorAverager.setTc(ms);
     }
 
 
     //-------------------------------------------------------------
-    // DEESSER
+    // SRDeesser methods
     //-------------------------------------------------------------
     SRDeesser::SRDeesser()
       : AttRelEnvelope(10.0, 100.0)
@@ -322,37 +300,41 @@ namespace SR {
       , mFilterQ(0.707)
       , mFilterGain(0.0)
       //, fSidechainBandpass(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, 0.5, 0.707, 0.0, 44100.0)
+      , fSidechainBandpass(SRFiltersIIR<double, 2>(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, 0.5, 0.707, 0.0, 44100.0))
       //, fDynamicEqFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, 0.5, 0.707, 0.0, 44100.0)
+      , fDynamicEqFilter(SRFiltersIIR<double, 2>(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, 0.5, 0.707, 0.0, 44100.0))
     {
     }
 
-    void SRDeesser::setDeesser(double threshDb, double ratio, double attackMs, double releaseMs, double normalizedFreq, double q, double kneeDb, double samplerate) {
-      setThresh(threshDb);
-      setRatio(ratio);
-      setAttack(attackMs);
-      setRelease(releaseMs);
-      setSampleRate(samplerate);
-      initFilter(normalizedFreq, q);
-      setKnee(kneeDb);
+    void SRDeesser::SetDeesser(double threshDb, double ratio, double attackMs, double releaseMs, double normalizedFreq, double q, double kneeDb, double samplerate) {
+      SRDynamicsBase::SetThresh(threshDb);
+      SRDynamicsBase::SetRatio(ratio);
+      AttRelEnvelope::SetAttack(attackMs);
+      AttRelEnvelope::SetRelease(releaseMs);
+      AttRelEnvelope::SetSampleRate(samplerate);
+      InitFilter(normalizedFreq, q);
+      SetKnee(kneeDb);
     }
 
-    void SRDeesser::initFilter(double freq, double q) {
+    void SRDeesser::InitFilter(double freq, double q) {
       mFilterFreq = freq;
       mFilterQ = q;
-      fSidechainBandpass.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, mFilterFreq, mFilterQ, 0.0, getSampleRate());
-      fDynamicEqFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, mFilterFreq, mFilterQ, 0.0, getSampleRate());
+      fSidechainBandpass.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, mFilterFreq, mFilterQ, 0.0, GetSampleRate());
+      fDynamicEqFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, mFilterFreq, mFilterQ, 0.0, GetSampleRate());
     }
 
-    void SRDeesser::setFrequency(double freq) {
+    void SRDeesser::SetFrequency(double freq) {
       mFilterFreq = freq;
       fSidechainBandpass.SetFreq(mFilterFreq);
       fDynamicEqFilter.SetFreq(mFilterFreq);
     }
 
-    void SRDeesser::setQ(double q) {
+    void SRDeesser::SetQ(double q) {
       mFilterQ = q;
       fSidechainBandpass.SetQ(q);
       fDynamicEqFilter.SetQ(q);
+
+
     }
   }
 } // end namespace
