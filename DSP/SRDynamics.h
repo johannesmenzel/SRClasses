@@ -178,7 +178,7 @@ namespace SR {
       void process(double &in1, double &in2, double sidechain);	// Compressor runtime process with stereo-linked key
 
     protected:
-      SRFiltersIIR<double, 2> fSidechainFilter; // Compressors stereo sidechain filter
+      SRFilterIIR<double, 2> fSidechainFilter; // Compressors stereo sidechain filter
       bool mTopologyFeedback; // True if its a feedback compressor, false for modern feedforward
       double sidechainSignal1, sidechainSignal2;      // Gain reduced signal to get used as new sidechain for feedback topology
       double mSidechainFc;  // Compressors stereo sidechain filters center frequency
@@ -586,7 +586,7 @@ namespace SR {
 
       void Process(double &in1, double &in2); // compressor runtime process if internal sidechain 
       void process(double &in1, double &in2, double sidechain);	// with stereo-linked key in
-      SRFiltersIIR<double, 2> fSidechainBandpass, fDynamicEqFilter;
+      SRFilterIIR<double, 2> fSidechainBandpass, fDynamicEqFilter;
 
     private:
       // transfer function
