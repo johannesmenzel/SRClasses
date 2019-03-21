@@ -257,7 +257,7 @@ namespace SR {
     class SRFilterParamSmooth
     {
     public:
-      SRFilterParamSmooth(double smoothingTimeInMs, double samplerate)
+      SRFilterParamSmooth(double smoothingTimeInMs = 10.0, double samplerate = 44100.0)
       {
         Reset(smoothingTimeInMs, samplerate);
       }
