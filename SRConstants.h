@@ -60,6 +60,7 @@ struct SRParamProperties {
   const char* group = ""; // Parameter group, not supported by every host
   const IParam::EParamType Type = IParam::EParamType::kTypeNone; // Data type of parameter
   const IParam::EFlags Flags = IParam::EFlags::kFlagsNone;
+  const IParam::EParamUnit Unit = IParam::EParamUnit::kUnitCustom;
   const int Knobs = 0; // Used control bitmap
   const struct Position
   {
@@ -73,49 +74,6 @@ struct SRParamProperties {
   const char* labelMax = ""; // GUI display string of maximum
   const char* labelCtr = ""; // GUI display string of middle position
   const char* tooltip = ""; // Tooltip on mouseover
-/*
-  StructParameterProperties() :
-    paramIdx(-1),
-    ctrlTag(-1),
-    name(""),
-    shortName(""),
-    defaultVal(0.0),
-    minVal(0.0),
-    maxVal(1.0),
-    stepValue(0.001),
-    centerVal(0.5),
-    centerPoint(0.5),
-    label(""),
-    group(""),
-    Type(-1),
-    Knobs(-1),
-    AttachToControlPanel(-1),
-    x(0),
-    y(0),
-    labelMin(""),
-    labelMax(""),
-    labelCtr(""),
-    tooltip("") {}
-  const char* GetName(int paramIdx) { return parameterProperties[paramIdx].name; };
-  const char* GetShortName(int paramIdx) { return parameterProperties[paramIdx].shortName; }; // Short name for GUI display
-  const double GetDefaultVal(int paramIdx) { return parameterProperties[paramIdx].defaultVal; }; // Plugin loads in this state, return by double click
-  const double GetMinVal(int paramIdx) { return parameterProperties[paramIdx].minVal; }; // Minimum value of parameter
-  const double GetMaxVal(int paramIdx) { return parameterProperties[paramIdx].maxVal; }; // Maximum value of parameter
-  const double GetStepValue(int paramIdx) { return parameterProperties[paramIdx].stepValue; };// Controls dial steps / accuracy
-  const double GetCenterVal(int paramIdx) { return parameterProperties[paramIdx].centerVal; }; // Value that void setShapeCentered() will center (knobs middle position)
-  const double GetCenterPoint(int paramIdx) { return parameterProperties[paramIdx].centerPoint; }; // Value WHERE void setShapeCentered() will center centerVal (0.5 means: real middle position)
-  const char* GetLabel(int paramIdx) { return parameterProperties[paramIdx].label; }; // Measuring unit of parameter
-  const char* GetGroup(int paramIdx) { return parameterProperties[paramIdx].group; }; // Parameter group, not supported by every host
-  const int GetType(int paramIdx) { return parameterProperties[paramIdx].Type; }; // Data type of parameter
-  const int GetKnobs(int paramIdx) { return parameterProperties[paramIdx].Knobs; }; // Used control bitmap
-  const int GetAttachToControlPanel(int paramIdx) { return parameterProperties[paramIdx].AttachToControlPanel; }; // Panel where control should appear
-  const int GetX(int paramIdx) { return parameterProperties[paramIdx].x; }; // Controls horizontal position within panel
-  const int GetY(int paramIdx) { return parameterProperties[paramIdx].y; }; // Controls vertical position within panel
-  const char* GetLabelMin(int paramIdx) { return parameterProperties[paramIdx].labelMin; }; // GUI display string of minimum
-  const char* GetLabelMax(int paramIdx) { return parameterProperties[paramIdx].labelMax; }; // GUI display string of maximum
-  const char* GetLabelCtr(int paramIdx) { return parameterProperties[paramIdx].labelCtr; }; // GUI display string of middle position
-  const char* GetTooltip(int paramIdx) { return parameterProperties[paramIdx].tooltip; }; // Tooltip on mouseover
- */
 };
 
 // DSP ELEMENTS
@@ -153,39 +111,6 @@ const double cascadedFilterQs[EFilterSlope::kNumOrders][10] = {
   {0.50154610, 0.51420760, 0.54119610, 0.58641385, 0.65754350, 0.76988452, 0.95694043, 1.3065630, 2.1418288, 6.3727474} // order 20
 };
 
-//const double mEqPassQ_O2_F1 = sqrt(0.5);
-//const double stQ = mEqPassQ_O2_F1; // standard Q value
-//const double mEqPassQ_O3_F1 = 1.;
-//const double mEqPassQ_O4_F1 = 0.54119610;
-//const double mEqPassQ_O4_F2 = 1.3065630;
-//const double mEqPassQ_O6_F1 = 0.51763809;
-//const double mEqPassQ_O6_F2 = 0.70710678;
-//const double mEqPassQ_O6_F3 = 1.9318517;
-//const double mEqPassQ_O8_F1 = 0.50979558;
-//const double mEqPassQ_O8_F2 = 0.60134489;
-//const double mEqPassQ_O8_F3 = 0.89997622;
-//const double mEqPassQ_O8_F4 = 2.5629154;
-//const double mEqPassQ_O10_F1 = 0.50623256;
-//const double mEqPassQ_O10_F2 = 0.56116312;
-//const double mEqPassQ_O10_F3 = 0.70710678;
-//const double mEqPassQ_O10_F4 = 1.1013446;
-//const double mEqPassQ_O10_F5 = 3.1962266;
-//const double mEqPassQ_O12_F1 = 0.50431448;
-//const double mEqPassQ_O12_F2 = 0.54119610;
-//const double mEqPassQ_O12_F3 = 0.63023621;
-//const double mEqPassQ_O12_F4 = 0.82133982;
-//const double mEqPassQ_O12_F5 = 1.3065630;
-//const double mEqPassQ_O12_F6 = 3.8306488;
-//const double mEqPassQ_O20_F1 = 0.50154610;
-//const double mEqPassQ_O20_F2 = 0.51420760;
-//const double mEqPassQ_O20_F3 = 0.54119610;
-//const double mEqPassQ_O20_F4 = 0.58641385;
-//const double mEqPassQ_O20_F5 = 0.65754350;
-//const double mEqPassQ_O20_F6 = 0.76988452;
-//const double mEqPassQ_O20_F7 = 0.95694043;
-//const double mEqPassQ_O20_F8 = 1.3065630;
-//const double mEqPassQ_O20_F9 = 2.1418288;
-//const double mEqPassQ_O20_F10 = 6.3727474;
 
 
 // UI ELEMENTS
