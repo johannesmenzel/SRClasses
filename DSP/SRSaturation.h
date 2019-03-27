@@ -40,14 +40,14 @@ namespace SR {
 		class SRSaturation {
 		public:
       // If type definitions of type int needed:
-      enum SaturationTypes {
-        typeMusicDSP = 0,
-        typeZoelzer,
-        typePirkle,
-        typePirkleModified,
-        typeRectHalf,
-        typeRectFull,
-        numTypes
+      enum ESaturationType {
+        kMusicDSP = 0,
+        kZoelzer,
+        kPirkle,
+        kPirkleMod,
+        kRectHalf,
+        kRectFull,
+        kNumTypes
         // ...
       };
 
@@ -55,7 +55,7 @@ namespace SR {
 			SRSaturation();
 			// class initializer
 			SRSaturation(
-				int pType,
+        SRSaturation::ESaturationType pType,
 				double pDriveDb,
 				double pAmountNormalized,
 				double pHarmonicsNormalized,
@@ -68,7 +68,7 @@ namespace SR {
 			~SRSaturation(); // destructor
 
 			// public functions that need to be accessed from outside
-			void setType(int pType);
+			void setType(SRSaturation::ESaturationType pType);
 			void setDrive(double pDriveDb);
 			void setAmount(double pAmountNormalized);
 			void setHarmonics(double pHarmonicsNormalized);
@@ -78,7 +78,7 @@ namespace SR {
       void setSamplerate(double mSamplerate);
 
 			void setSaturation(
-				int pType,
+        SRSaturation::ESaturationType pType,
 				double pDriveDb,
 				double pAmountNormalized,
 				double pHarmonicsNormalized,
@@ -131,12 +131,12 @@ namespace SR {
 
 			// call specific inline functions
 			switch (this->mType) {
-			case typeMusicDSP: in = processMusicDSP(in); break;
-			case typePirkle: in = processPirkle(in); break;
-			case typeZoelzer: in = processZoelzer(in); break;
-			case typePirkleModified: in = processPirkleModified(in); break;
-			case typeRectHalf: in = processRectHalf(in); break;
-			case typeRectFull: in = processRectFull(in); break;
+			case kMusicDSP: in = processMusicDSP(in); break;
+			case kPirkle: in = processPirkle(in); break;
+			case kZoelzer: in = processZoelzer(in); break;
+			case kPirkleMod: in = processPirkleModified(in); break;
+			case kRectHalf: in = processRectHalf(in); break;
+			case kRectFull: in = processRectFull(in); break;
 			default: break;
 			}
 
@@ -169,7 +169,7 @@ namespace SR {
 		}
 
 		inline double SRSaturation::processZoelzer(double in) {
-			if (mAmountNormalized > 0.) {
+			if (mAmountNormalized > 0.0) {
 				in = (in > 0.)
 					? (1 - exp(-in)) * mAmountNormalized + dry * (1. - mAmountNormalized)
 					: ((-1 + exp(in)) * mAmountNormalized + dry * (1. - mAmountNormalized));
@@ -179,7 +179,7 @@ namespace SR {
 
 		inline double SRSaturation::processPirkle(double in) {
 
-			if (mAmountNormalized > .001) {
+			if (mAmountNormalized > 0.0) {
 				double mAmountModified = pow(mAmountNormalized, 3.);
 				in = (in >= 0)
 					? tanh(mAmountModified * in) / tanh(mAmountModified)
@@ -189,7 +189,7 @@ namespace SR {
 		}
 
 		inline double SRSaturation::processPirkleModified(double in) {
-			if (mAmountNormalized > .001) {
+			if (mAmountNormalized > 0.0) {
 				double mAmountModified = pow(mAmountNormalized, 3.) * (1. + (in - prev) * (1. / mDriveNormalized) * mSkewNormalized);
 				in = (in >= 0)
 					? tanh(mAmountModified * in) / tanh(mAmountModified)

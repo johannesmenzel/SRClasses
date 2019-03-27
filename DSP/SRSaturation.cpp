@@ -9,20 +9,18 @@ namespace SR {
 
 
 		SRSaturation::SRSaturation() {
-			// declare variable values so that non empty
-			mType = typeMusicDSP;
-			// member variables
+			mType = kMusicDSP;
 			mDriveNormalized = 1.;
 			mAmountNormalized = 0.;
 			mHarmonicsNormalized = .5;
 			mPositive = true;
 			mSkewNormalized = 0.;
 			mWetNormalized = 1.;
-      mSamplerate = 44000.;
+      mSamplerate = 44100.;
 		}
 
 		// Constructor
-		SRSaturation::SRSaturation(int pType, double pDriveDb, double pAmountNormalized, double pHarmonicsNormalized, bool pPositiveSide, double pSkewNormalized, double pWet, double pSamplerate) {
+		SRSaturation::SRSaturation(SRSaturation::ESaturationType pType, double pDriveDb, double pAmountNormalized, double pHarmonicsNormalized, bool pPositiveSide, double pSkewNormalized, double pWet, double pSamplerate) {
 			// internal variables
 			setSaturation(pType, pDriveDb, pAmountNormalized, pHarmonicsNormalized, pPositiveSide, pSkewNormalized, pWet, pSamplerate);
 			mAmount = 0.;
@@ -34,7 +32,7 @@ namespace SR {
 		SRSaturation::~SRSaturation() {
 		}
 
-		void SRSaturation::setType(int pType) {
+		void SRSaturation::setType(SRSaturation::ESaturationType pType) {
 			this->mType = pType;
 			calcSaturation();
 		}
@@ -68,7 +66,7 @@ namespace SR {
       this->mSamplerate = mSamplerate;
     }
 
-		void SRSaturation::setSaturation(int pType, double pDriveDb, double pAmountNormalized, double pHarmonicsNormalized, bool pPositive, double pSkewNormalized, double pWetNormalized, double pSamplerate) {
+		void SRSaturation::setSaturation(SRSaturation::ESaturationType pType, double pDriveDb, double pAmountNormalized, double pHarmonicsNormalized, bool pPositive, double pSkewNormalized, double pWetNormalized, double pSamplerate) {
 			this->mType = pType;
 			this->mDriveNormalized = SR::Utils::DBToAmp(pDriveDb);
 			this->mAmountNormalized = pAmountNormalized;
@@ -85,12 +83,12 @@ namespace SR {
 		// Internal calculations. Example on calculation depending on mType:
 		void SRSaturation::calcSaturation(void) {
 			switch (this->mType) {
-			case typePirkle: break;
-			case typePirkleModified: break;
-			case typeZoelzer: break;
-			case typeMusicDSP: this->mAmount = (1. - mAmountNormalized); break;
-			case typeRectHalf: break;
-			case typeRectFull: break;
+			case kPirkle: break;
+			case kPirkleMod: break;
+			case kZoelzer: break;
+			case kMusicDSP: this->mAmount = (1. - mAmountNormalized); break;
+			case kRectHalf: break;
+			case kRectFull: break;
 			default: break;
 			}
 			return;
