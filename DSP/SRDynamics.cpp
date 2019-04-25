@@ -163,8 +163,13 @@ namespace SR {
       SetTopologyFeedback(isFeedbackCompressor);
     }
 
-    void SRCompressor::SetMaxGrDb(double maxGrDb) {
-      mMaxGr = maxGrDb;
+    void SRCompressor::SetMaxGrDb(double maxGrDb, bool sigmoid) {
+      if (!sigmoid)
+        mMaxGr = maxGrDb;
+      else {
+        const double tempratio = 1. / mRatio;
+        mMaxGr = (maxGrDb + (maxGrDb * 9.) / (maxGrDb * tempratio - maxGrDb - 9.)); // Simplified P4 sigmoid fitting with d+\frac{da}{dx-d-a} with f(1) = 0.0
+      }
     }
 
     void SRCompressor::InitSidechainFilter(double sidechainFc) {

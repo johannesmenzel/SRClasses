@@ -168,7 +168,7 @@ namespace SR {
 
       // parameters
       virtual void InitCompressor(double threshDb, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, bool isFeedbackCompressor, bool autoMakeup, double samplerate);
-      virtual void SetMaxGrDb(double maxGrDb);
+      virtual void SetMaxGrDb(double maxGrDb, bool sigmoid = true);
       virtual void InitSidechainFilter(double sidechainFC);
       virtual void SetSidechainFilterFreq(double sidechainFc);
       virtual void SetTopologyFeedback(bool isFeedbackCompressor);
