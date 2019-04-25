@@ -30,9 +30,9 @@ namespace SR {
       , mLabelText(labelText)
       , mKnobFrac(knobFrac)
       , mColor(color)
-      , mTextCircleLabelMin(IText(10, COLOR_LIGHT_GRAY, DEFAULT_FONT, IText::kStyleNormal, IText::kAlignFar))
-      , mTextCircleLabelMax(IText(10, COLOR_LIGHT_GRAY, DEFAULT_FONT, IText::kStyleNormal, IText::kAlignNear))
-      , mTextCircleLabelCtr(IText(10, COLOR_LIGHT_GRAY, DEFAULT_FONT, IText::kStyleNormal, IText::kAlignCenter))
+      , mTextCircleLabelMin(10.f, COLOR_LIGHT_GRAY, nullptr, IText::EAlign::kAlignFar)
+      , mTextCircleLabelMax(10.f, COLOR_LIGHT_GRAY, nullptr, IText::EAlign::kAlignNear)
+      , mTextCircleLabelCtr(10.f, COLOR_LIGHT_GRAY, nullptr, IText::EAlign::kAlignCenter)
       , mPatternShadow(IPattern(EPatternType::kSolidPattern))
       , mPatternHead(IPattern(EPatternType::kRadialPattern))
       , mPatternHeadLights(IPattern(EPatternType::kRadialPattern))
@@ -450,7 +450,7 @@ namespace SR {
         }
 
         if (mouseOver) g.FillRoundRect(GetColor(kHL), handleBounds, cornerRadius);
-        if (mControl->GetAnimationFunction()) DrawFlashCircle(g);
+        if (mControl->GetAnimationFunction()) DrawSplash(g);
         if (mDrawFrame) g.DrawRoundRect(GetColor(kFR), handleBounds, cornerRadius, 0, mFrameThickness);
       }
       else {
@@ -460,7 +460,7 @@ namespace SR {
           if (mDrawShadows && !mEmboss) g.FillRoundRect(GetColor(kSH), handleBounds, cornerRadius);
           g.FillRoundRect(GetColor(kFG), handleBounds, cornerRadius);
           if (mouseOver) g.FillRoundRect(GetColor(kHL), handleBounds, cornerRadius);
-          if (mControl->GetAnimationFunction()) DrawFlashCircle(g);
+          if (mControl->GetAnimationFunction()) DrawSplash(g);
           if (mDrawFrame) g.DrawRoundRect(GetColor(kFR), handleBounds, cornerRadius, 0, mFrameThickness);
         }
 
@@ -474,7 +474,7 @@ namespace SR {
             g.PathFill(GetColor(kSH));
           }
           if (mouseOver) g.FillRoundRect(GetColor(kHL), handleBounds.GetTranslated(mShadowOffset, mShadowOffset), cornerRadius);
-          if (mControl->GetAnimationFunction()) DrawFlashCircle(g);
+          if (mControl->GetAnimationFunction()) DrawSplash(g);
           if (mDrawFrame) g.DrawRoundRect(GetColor(kFR), handleBounds.GetTranslated(mShadowOffset, mShadowOffset), cornerRadius, 0, mFrameThickness);
         }
       }

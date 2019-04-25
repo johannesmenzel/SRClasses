@@ -156,9 +156,16 @@ const struct {
     IColor(255, 249, 206, 34),  // Extra 3    (DEFAULT_X3COLOR = COLOR_BLUE(255, 0, 0, 255))
   };
   const int textSize = 14;
-  const IText textKnobLabel = IText(textSize, colorDefaultText, nullptr, IText::kStyleBold, IText::kAlignCenter, IText::kVAlignBottom, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
-  const IText textKnobValue = IText(textSize, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignBottom, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
-  const IText textVersionString = IText(20, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignNear, IText::kVAlignMiddle, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
-  const IText textPresetMenu = IText(30, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignMiddle, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
+  const IText textKnobLabel = IText(textSize, colorDefaultText, nullptr, IText::kAlignCenter, IText::kVAlignBottom);
+  const IText textKnobValue = IText(textSize, colorDefaultText, nullptr, IText::kAlignCenter, IText::kVAlignBottom);
+  const IText textVersionString = IText(20.f, colorDefaultText, nullptr,  IText::kAlignNear, IText::kVAlignMiddle);
+  const IText textPresetMenu = IText(30.f, colorDefaultText, nullptr, IText::kAlignCenter, IText::kVAlignMiddle);
+  // THESE ARE THE OLD ITEXT CONSTS
+  //const IText textKnobLabel = IText(textSize, colorDefaultText, nullptr, IText::kStyleBold, IText::kAlignCenter, IText::kVAlignBottom, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
+  //const IText textKnobValue = IText(textSize, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignBottom, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
+  //const IText textVersionString = IText(20, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignNear, IText::kVAlignMiddle, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
+  //const IText textPresetMenu = IText(30, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignMiddle, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
+
+
 } SRLayout;
 

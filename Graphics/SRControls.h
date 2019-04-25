@@ -178,7 +178,7 @@ namespace SR {
       , public IVectorBase
     {
     public:
-      SRVectorSwitch(IRECT bounds, int paramIdx = kNoParameter, IActionFunction actionFunc = FlashCircleClickActionFunc,
+      SRVectorSwitch(IRECT bounds, int paramIdx = kNoParameter, IActionFunction actionFunc = SplashClickActionFunc,
         const char* label = "", const IVColorSpec& colorSpec = DEFAULT_SPEC, int numStates = 2);
 
       void Draw(IGraphics& g) override;
@@ -434,7 +434,7 @@ namespace SR {
         , mMaxTrackValue(4.f)
         , mMarkStep(markStep)
         , mLabelStep(labelStep)
-        , mText(IText(14, COLOR_LIGHT_GRAY, DEFAULT_FONT, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignMiddle, 0, IText::kQualityClearType))
+        , mText(IText(14, COLOR_LIGHT_GRAY, DEFAULT_FONT, IText::kAlignCenter, IText::kVAlignMiddle))
         , mNumLines(int(maxDb - minDb))
         , mNumLabels(int((maxDb - minDb) / labelStep))
         , rectLabelFrame(IRECT())
