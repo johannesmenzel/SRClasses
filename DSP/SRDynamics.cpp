@@ -163,13 +163,18 @@ namespace SR {
       SetTopologyFeedback(isFeedbackCompressor);
     }
 
-    void SRCompressor::SetMaxGrDb(double maxGrDb) {
-      mMaxGr = maxGrDb;
+    void SRCompressor::SetMaxGrDb(double maxGrDb, bool sigmoid) {
+      if (!sigmoid)
+        mMaxGr = maxGrDb;
+      else {
+        const double tempratio = 1. / mRatio;
+        mMaxGr = (maxGrDb + (maxGrDb * 9.) / (maxGrDb * tempratio - maxGrDb - 9.)); // Simplified P4 sigmoid fitting with d+\frac{da}{dx-d-a} with f(1) = 0.0
+      }
     }
 
     void SRCompressor::InitSidechainFilter(double sidechainFc) {
       mSidechainFc = sidechainFc;
-      fSidechainFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFc, 0.7071, 0., AttRelEnvelope::GetSampleRate());
+      fSidechainFilter.SetFilter(SRFilterIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFc, 0.7071, 0., AttRelEnvelope::GetSampleRate());
     }
 
     void SRCompressor::SetSidechainFilterFreq(double sidechainFc) {
@@ -299,10 +304,8 @@ namespace SR {
       , mFilterFreq(0.5)
       , mFilterQ(0.707)
       , mFilterGain(0.0)
-      //, fSidechainBandpass(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, 0.5, 0.707, 0.0, 44100.0)
-      , fSidechainBandpass(SRFiltersIIR<double, 2>(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, 0.5, 0.707, 0.0, 44100.0))
-      //, fDynamicEqFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, 0.5, 0.707, 0.0, 44100.0)
-      , fDynamicEqFilter(SRFiltersIIR<double, 2>(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, 0.5, 0.707, 0.0, 44100.0))
+      , fSidechainBandpass(SRFilterIIR<double, 2>(SRFilterIIR<double, 2>::EFilterType::BiquadBandpass, 0.5, 0.707, 0.0, 44100.0))
+      , fDynamicEqFilter(SRFilterIIR<double, 2>(SRFilterIIR<double, 2>::EFilterType::BiquadPeak, 0.5, 0.707, 0.0, 44100.0))
     {
     }
 
@@ -319,8 +322,8 @@ namespace SR {
     void SRDeesser::InitFilter(double freq, double q) {
       mFilterFreq = freq;
       mFilterQ = q;
-      fSidechainBandpass.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadBandpass, mFilterFreq, mFilterQ, 0.0, GetSampleRate());
-      fDynamicEqFilter.SetFilter(SRFiltersIIR<double, 2>::EFilterType::BiquadPeak, mFilterFreq, mFilterQ, 0.0, GetSampleRate());
+      fSidechainBandpass.SetFilter(SRFilterIIR<double, 2>::EFilterType::BiquadBandpass, mFilterFreq, mFilterQ, 0.0, GetSampleRate());
+      fDynamicEqFilter.SetFilter(SRFilterIIR<double, 2>::EFilterType::BiquadPeak, mFilterFreq, mFilterQ, 0.0, GetSampleRate());
     }
 
     void SRDeesser::SetFrequency(double freq) {

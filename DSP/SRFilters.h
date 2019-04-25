@@ -132,7 +132,7 @@ namespace SR {
 
     // TWO POLE FILTERS
     template<typename T = double, int MAXNUMCHANNELS = 1>
-    class SRFiltersIIR {
+    class SRFilterIIR {
     public:
 
       enum EFilterType {
@@ -150,10 +150,10 @@ namespace SR {
         OnepoleLowpass
       };
 
-      SRFiltersIIR();
+      SRFilterIIR();
 
-      SRFiltersIIR(EFilterType type, double frequency, double q, double peakGainDB, double samplerate); // Two pole filters
-      ~SRFiltersIIR();
+      SRFilterIIR(EFilterType type, double frequency, double q, double peakGainDB, double samplerate); // Two pole filters
+      ~SRFilterIIR();
 
       // Setter methods
       void SetType(EFilterType type); // Set filter type
@@ -182,7 +182,7 @@ namespace SR {
 
     // IIR processing
     template<typename T, int MAXNUMCHANNELS>
-    inline T SRFiltersIIR<T, MAXNUMCHANNELS>::Process(T in, int channel) {
+    inline T SRFilterIIR<T, MAXNUMCHANNELS>::Process(T in, int channel) {
       assert(channel < MAXNUMCHANNELS);
       switch (mType)
       {
@@ -204,7 +204,7 @@ namespace SR {
 
 
     template<typename T, int MAXNUMCHANNELS>
-    inline void SRFiltersIIR<T, MAXNUMCHANNELS>::ProcessBlock(T** inputs, T** outputs, int nChans, int nFrames) {
+    inline void SRFilterIIR<T, MAXNUMCHANNELS>::ProcessBlock(T** inputs, T** outputs, int nChans, int nFrames) {
 
       for (auto c = 0; c < nChans; c++)
       {
@@ -221,13 +221,13 @@ namespace SR {
     // ONE POLE FILTERS
 
     template<typename T = double, int MAXNUMCHANNELS = 1>
-    class SRFiltersOnePole {
+    class SRFilterOnePole {
     public:
-      SRFiltersOnePole();
-      SRFiltersOnePole(int type, double frequency, double samplerate);
+      SRFilterOnePole();
+      SRFilterOnePole(int type, double frequency, double samplerate);
       void SetFilter(int type, double frequency, double samplerate);
       void SetType(int type);
-      ~SRFiltersOnePole();
+      ~SRFilterOnePole();
       void SetFreq(double frequency);
       void Update(void);
       T Process(T in);
@@ -242,7 +242,7 @@ namespace SR {
 
 
     template<typename T, int MAXNUMCHANNELS>
-    inline T SRFiltersOnePole<T, MAXNUMCHANNELS>::Process(T in) {
+    inline T SRFilterOnePole<T, MAXNUMCHANNELS>::Process(T in) {
       //	return z1 = in * a0 + z1 * b1;
       z1 = in * a0 + z1 * b1;
       in -= z1;
@@ -254,15 +254,15 @@ namespace SR {
 
     // PARAMETER SMOOTHING
 
-    class SRParamSmooth
+    class SRFilterParamSmooth
     {
     public:
-      SRParamSmooth(double smoothingTimeInMs, double samplerate)
+      SRFilterParamSmooth(double smoothingTimeInMs = 10.0, double samplerate = 44100.0)
       {
         Reset(smoothingTimeInMs, samplerate);
       }
 
-      ~SRParamSmooth() {}
+      ~SRFilterParamSmooth() {}
 
       void Reset(double smoothingTimeInMs, double samplerate) {
         const double twoPi = 6.283185307179586476925286766559;
@@ -411,7 +411,7 @@ namespace SR {
 
 
     template<typename T, int MAXNUMCHANNELS>
-    SRFiltersIIR<T, MAXNUMCHANNELS>::SRFiltersIIR() {
+    SRFilterIIR<T, MAXNUMCHANNELS>::SRFilterIIR() {
       mType = EFilterType::BiquadLowpass;
       a0 = 1.0;
       a1 = a2 = b1 = b2 = 0.0;
@@ -426,7 +426,7 @@ namespace SR {
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    SRFiltersIIR<T, MAXNUMCHANNELS>::SRFiltersIIR(EFilterType type, double frequency, double q, double peakGainDB, double samplerate) {
+    SRFilterIIR<T, MAXNUMCHANNELS>::SRFilterIIR(EFilterType type, double frequency, double q, double peakGainDB, double samplerate) {
       SetFilter(type, frequency, q, peakGainDB, samplerate);
       for (int i = 0; i < MAXNUMCHANNELS; i++) {
         z1[i] = z2[i] = 0.0;
@@ -434,43 +434,43 @@ namespace SR {
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    SRFiltersIIR<T, MAXNUMCHANNELS>::~SRFiltersIIR() {
+    SRFilterIIR<T, MAXNUMCHANNELS>::~SRFilterIIR() {
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetType(EFilterType type) {
+    void SRFilterIIR<T, MAXNUMCHANNELS>::SetType(EFilterType type) {
       mType = type;
       mPoles = (type > EFilterType::OnepoleHighpass) ? 1 : 2;
       Update();
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetQ(double q) {
+    void SRFilterIIR<T, MAXNUMCHANNELS>::SetQ(double q) {
       mQ = q;
       Update();
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetFreq(double frequency) {
+    void SRFilterIIR<T, MAXNUMCHANNELS>::SetFreq(double frequency) {
       mFreq = frequency;
       Update();
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetPeakGain(double peakGainDB) {
+    void SRFilterIIR<T, MAXNUMCHANNELS>::SetPeakGain(double peakGainDB) {
       mPeakGain = peakGainDB;
       Update();
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersIIR<T, MAXNUMCHANNELS>::GetFrequencyResponse(double* values, int points, double rangeDb, bool returnPhase) {
+    void SRFilterIIR<T, MAXNUMCHANNELS>::GetFrequencyResponse(double* values, int points, double rangeDb, bool returnPhase) {
       for (int i = 0; i < points; ++i) {
         values[i] = GetFrequencyResponse(0.5 * double(i) / double(points), rangeDb, returnPhase);
       }
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    double SRFiltersIIR<T, MAXNUMCHANNELS>::GetFrequencyResponse(double atNormalizedFrequency, double rangeDb, bool returnPhase) {
+    double SRFilterIIR<T, MAXNUMCHANNELS>::GetFrequencyResponse(double atNormalizedFrequency, double rangeDb, bool returnPhase) {
       assert(atNormalizedFrequency <= 0.5);
       double w = 2. * M_PI * atNormalizedFrequency;
 
@@ -506,7 +506,7 @@ namespace SR {
 
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersIIR<T, MAXNUMCHANNELS>::SetFilter(EFilterType type, double frequency, double q, double peakGainDB, double samplerate) {
+    void SRFilterIIR<T, MAXNUMCHANNELS>::SetFilter(EFilterType type, double frequency, double q, double peakGainDB, double samplerate) {
       mType = type;
       mQ = q;
       mFreq = frequency;
@@ -517,7 +517,7 @@ namespace SR {
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersIIR<T, MAXNUMCHANNELS>::Update(void) {
+    void SRFilterIIR<T, MAXNUMCHANNELS>::Update(void) {
       double norm, O, K, V;
       double L, E, B, G;
       switch (this->mType) {
@@ -686,14 +686,14 @@ namespace SR {
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    SRFiltersOnePole<T, MAXNUMCHANNELS>::SRFiltersOnePole() {
+    SRFilterOnePole<T, MAXNUMCHANNELS>::SRFilterOnePole() {
       a0 = 1.0;
       b1 = 0.0;
       z1 = 0.0;
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    SRFiltersOnePole<T, MAXNUMCHANNELS>::SRFiltersOnePole(int type, double frequency, double samplerate) {
+    SRFilterOnePole<T, MAXNUMCHANNELS>::SRFilterOnePole(int type, double frequency, double samplerate) {
       SetFilter(type, frequency, samplerate);
       z1 = 0.0;
       SetType(type);
@@ -701,30 +701,31 @@ namespace SR {
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    SRFiltersOnePole<T, MAXNUMCHANNELS>::~SRFiltersOnePole()
+    SRFilterOnePole<T, MAXNUMCHANNELS>::~SRFilterOnePole()
     {
     }
+
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersOnePole<T, MAXNUMCHANNELS>::SetFilter(int type, double frequency, double samplerate) {
+    void SRFilterOnePole<T, MAXNUMCHANNELS>::SetFilter(int type, double frequency, double samplerate) {
       this->mType = type;
       this->mFreq = frequency;
       this->mSamplerate = samplerate;
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersOnePole<T, MAXNUMCHANNELS>::SetType(int type) {
+    void SRFilterOnePole<T, MAXNUMCHANNELS>::SetType(int type) {
       this->mType = type;
       Update();
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersOnePole<T, MAXNUMCHANNELS>::SetFreq(double frequency) {
+    void SRFilterOnePole<T, MAXNUMCHANNELS>::SetFreq(double frequency) {
       this->mFreq = frequency;
       Update();
     }
 
     template<typename T, int MAXNUMCHANNELS>
-    void SRFiltersOnePole<T, MAXNUMCHANNELS>::Update(void) {
+    void SRFilterOnePole<T, MAXNUMCHANNELS>::Update(void) {
       b1 = exp(-2.0 * M_PI * mFreq);
       a0 = 1.0 - b1;
       //	b1 = -exp(-2.0 * M_PI * (0.5 - mFreq));

@@ -33,179 +33,232 @@
 
 
 namespace SR {
-	namespace DSP {
+  namespace DSP {
 
 
 
-		class SRSaturation {
-		public:
+    class SRSaturation {
+    public:
       // If type definitions of type int needed:
-      enum SaturationTypes {
-        typeMusicDSP = 0,
-        typeZoelzer,
-        typePirkle,
-        typePirkleModified,
-        typeRectHalf,
-        typeRectFull,
-        numTypes
+      enum ESaturationType {
+        kMusicDSP = 0,
+        kZoelzer,
+        kPirkle,
+        kPirkleMod,
+        kSoftSat,
+        kRectHalf,
+        kRectFull,
+        kNumTypes
         // ...
       };
 
-			// constructor
-			SRSaturation();
-			// class initializer
-			SRSaturation(
-				int pType,
-				double pDriveDb,
-				double pAmountNormalized,
-				double pHarmonicsNormalized,
-				bool pPositiveSide,
-				double pSkewNormalized,
-				double pWet,
+      SRSaturation()
+        : mType(kMusicDSP)
+        , mDriveNormalized(1.0)
+        , mAmountNormalized(0.0)
+        , mHarmonicsNormalized(1.0)
+        , mPositive(true)
+        , mSkewNormalized(0.0)
+        , mWetNormalized(1.0)
+        , mSamplerate(44100.0)
+        , mAmount(0.)
+      {
+      }
+
+      SRSaturation(
+        SRSaturation::ESaturationType pType,
+        double pDriveDb,
+        double pAmountNormalized,
+        double pHarmonicsNormalized,
+        bool pPositiveSide,
+        double pSkewNormalized,
+        double pWet,
         double pSamplerate
-			);
-			// destructor
-			~SRSaturation(); // destructor
+      )
+        : prev(0.0)
+        , dry(0.0)
+      {
+        SetSaturation(pType, pDriveDb, pAmountNormalized, pHarmonicsNormalized, pPositiveSide, pSkewNormalized, pWet, pSamplerate);
+      }
 
-			// public functions that need to be accessed from outside
-			void setType(int pType);
-			void setDrive(double pDriveDb);
-			void setAmount(double pAmountNormalized);
-			void setHarmonics(double pHarmonicsNormalized);
-			void setPositive(bool pPositive);
-			void setSkew(double pSkewNormalized);
-			void setWet(double pWetNormalized);
-      void setSamplerate(double mSamplerate);
+      ~SRSaturation() {}
 
-			void setSaturation(
-				int pType,
-				double pDriveDb,
-				double pAmountNormalized,
-				double pHarmonicsNormalized,
-				bool pPositive,
-				double pSkewNormalized,
-				double pWetNormalized,
+      void SetType(SRSaturation::ESaturationType pType) { mType = pType; calcSaturation(); }
+      void SetDrive(double pDriveDb) { mDriveNormalized = SR::Utils::DBToAmp(pDriveDb); }
+      void SetAmount(double pAmountNormalized) { mAmountNormalized = pAmountNormalized; calcSaturation(); }
+      void SetHarmonics(double pHarmonicsNormalized) { mHarmonicsNormalized = pHarmonicsNormalized; }
+      void SetPositive(bool pPositive) { mPositive = pPositive; }
+      void SetSkew(double pSkewNormalized) { mSkewNormalized = pSkewNormalized; calcSaturation(); }
+      void SetWet(double pWetNormalized) { mWetNormalized = pWetNormalized; }
+      void SetSamplerate(double pSamplerate) { mSamplerate = pSamplerate; }
+      void SetSaturation(
+        SRSaturation::ESaturationType pType,
+        double pDriveDb,
+        double pAmountNormalized,
+        double pHarmonicsNormalized,
+        bool pPositive,
+        double pSkewNormalized,
+        double pWetNormalized,
         double pSamplerate
-			);
-			// inline process function, if needed
-      double process(double in);
+      )
+      {
+        mType = pType;
+        mDriveNormalized = SR::Utils::DBToAmp(pDriveDb);
+        mAmountNormalized = pAmountNormalized;
+        mHarmonicsNormalized = pHarmonicsNormalized;
+        mPositive = pPositive;
+        mSkewNormalized = pSkewNormalized;
+        mWetNormalized = pWetNormalized;
+        mSamplerate = pSamplerate;
+        calcSaturation();
+      }
+
+      double Process(double in);
 
 
 
-		protected:
-			// Protected functions that do internal calculations and that are called from other funcions
+    protected:
       double processMusicDSP(double in);
       double processZoelzer(double in);
       double processPirkle(double in);
       double processPirkleModified(double in);
+      double processSoftSat(double in);
       double processRectHalf(double in);
       double processRectFull(double in);
-			void calcSaturation(void);
+      void calcSaturation() {
+        switch (mType) {
+        case kMusicDSP:
+          mAmount = (1. - mAmountNormalized);
+          break;
+          //case kZoelzer:
+          //  break;
+        case kPirkle:
+        case kPirkleMod:
+          mAmount = pow(mAmountNormalized, 3.);
+          break;
+        case kSoftSat:
+          mAmount = 1. / mAmountNormalized;
+          break;
+          //case kRectHalf:
+          //  break;
+          //case kRectFull:
+          //  break;
+        default:
+          mAmount = mAmountNormalized;
+          break;
+        }
+        return;
+      }
 
-			// Internal member and internal variables
-			int mType;
-			// member variables
-			double mDriveNormalized;
-			double mAmountNormalized;
-			double mAmount;
-			double mHarmonicsNormalized;
-			bool mPositive; // if aiming for even harmonics, the positive side of the envelope will be affected if true, otherwise the negative side
-			double mSkewNormalized;
-			double mWetNormalized;
+      SRSaturation::ESaturationType mType;
+      double mDriveNormalized;
+      double mAmountNormalized;
+      double mAmount;
+      double mHarmonicsNormalized;
+      bool mPositive; // if aiming for even harmonics, the positive side of the envelope will be affected if true, otherwise the negative side
+      double mSkewNormalized;
+      double mWetNormalized;
       double mSamplerate;
-      //OverSampler<double> mOversampler;
-      // internal variables
-			double prev;
-			double dry;
+
+      double prev;
+      double dry;
+    };
+    // end of class
 
 
-		}; // end of class
 
-		inline double SRSaturation::process(double in) {
+    // INLINE PROCESSING FUNCTIONS
+    // ----------------------------------------------------------------------------
 
-			// apply drive
-			in *= mDriveNormalized;
+    inline double SRSaturation::Process(double in) {
+      // Don't process if amount is zero, also preventing dividing zeros
+      if (mAmountNormalized == 0.0)
+        return in;
 
-			// create driven dry samples
-			dry = in;
+      // apply drive
+      in *= mDriveNormalized;
 
-			// call specific inline functions
-			switch (this->mType) {
-			case typeMusicDSP: in = processMusicDSP(in); break;
-			case typePirkle: in = processPirkle(in); break;
-			case typeZoelzer: in = processZoelzer(in); break;
-			case typePirkleModified: in = processPirkleModified(in); break;
-			case typeRectHalf: in = processRectHalf(in); break;
-			case typeRectFull: in = processRectFull(in); break;
-			default: break;
-			}
+      // create driven dry samples
+      dry = in;
 
-			if (!mPositive && in < 0.) in = in * mHarmonicsNormalized + dry * (1. - mHarmonicsNormalized);
-			if (mPositive && in > 0.) in = in * mHarmonicsNormalized + dry * (1. - mHarmonicsNormalized);
+      // call specific inline functions
+      switch (mType) {
+      case kMusicDSP: in = processMusicDSP(in); break;
+      case kZoelzer: in = processZoelzer(in); break;
+      case kPirkle: in = processPirkle(in); break;
+      case kPirkleMod: in = processPirkleModified(in); break;
+      case kSoftSat: in = processSoftSat(in); break;
+      case kRectHalf: in = processRectHalf(in); break;
+      case kRectFull: in = processRectFull(in); break;
+      default: break;
+      }
 
+      prev = dry;
 
-			prev = dry;
+      if (!mPositive && in < 0.) in = in * mHarmonicsNormalized + dry * (1. - mHarmonicsNormalized);
+      if (mPositive && in > 0.) in = in * mHarmonicsNormalized + dry * (1. - mHarmonicsNormalized);
 
-			// return to old drive level
-			in *= (1. / mDriveNormalized);
+      // Apply Dry/Wet
+      if (mWetNormalized < 1.0)
+        in = mWetNormalized * in + (1. - mWetNormalized) * dry;
 
-      return in;
-		}
-
-		inline double SRSaturation::processMusicDSP(double in) {
-			if (fabs(in) > mAmount) {
-				in = (in > 0.)
-					? (mAmount + (fabs(in) - mAmount) / (1. + pow((fabs(in) - mAmount) / (1 - mAmount), 2))) * (in / fabs(in))
-					: (mAmount + (fabs(in) - mAmount) / (1. + pow((fabs(in) - mAmount) / (1 - mAmount), 2))) * (in / fabs(in));
-			}
-
-			// Soften by (1 - Amount)
-			in = (1. - mAmount) * in + mAmount * dry;
-
-			// Saturation Normalization
-			in *= (1. / ((mAmount + 1.) / 2.));
+      // return to old drive level
+      in *= (1. / mDriveNormalized);
 
       return in;
-		}
+    }
 
-		inline double SRSaturation::processZoelzer(double in) {
-			if (mAmountNormalized > 0.) {
-				in = (in > 0.)
-					? (1 - exp(-in)) * mAmountNormalized + dry * (1. - mAmountNormalized)
-					: ((-1 + exp(in)) * mAmountNormalized + dry * (1. - mAmountNormalized));
-			}
+    inline double SRSaturation::processMusicDSP(double in) {
+      if (fabs(in) > mAmount) {
+        in = (in > 0.)
+          ? (mAmount + (fabs(in) - mAmount) / (1. + pow((fabs(in) - mAmount) / (1. - mAmount), 2.))) * (in / fabs(in))
+          : (mAmount + (fabs(in) - mAmount) / (1. + pow((fabs(in) - mAmount) / (1. - mAmount), 2.))) * (in / fabs(in));
+      }
+
+      // Soften by (1 - Amount)
+      in = (1. - mAmount) * in + mAmount * dry;
+
+      // Saturation Normalization
+      in *= (1. / ((mAmount + 1.) / 2.));
+
       return in;
-		}
+    }
 
-		inline double SRSaturation::processPirkle(double in) {
-
-			if (mAmountNormalized > .001) {
-				double mAmountModified = pow(mAmountNormalized, 3.);
-				in = (in >= 0)
-					? tanh(mAmountModified * in) / tanh(mAmountModified)
-					: tanh(mAmountModified * in) / tanh(mAmountModified);
-			}
+    inline double SRSaturation::processZoelzer(double in) {
+      in = (in > 0.)
+        ? 1. - exp(-in)
+        : -1. + exp(in);
       return in;
-		}
+    }
 
-		inline double SRSaturation::processPirkleModified(double in) {
-			if (mAmountNormalized > .001) {
-				double mAmountModified = pow(mAmountNormalized, 3.) * (1. + (in - prev) * (1. / mDriveNormalized) * mSkewNormalized);
-				in = (in >= 0)
-					? tanh(mAmountModified * in) / tanh(mAmountModified)
-					: tanh(mAmountModified * in) / tanh(mAmountModified);
-			}
+    inline double SRSaturation::processPirkle(double in) {
+      in = tanh(mAmount * in) / tanh(mAmount);
       return in;
-		}
+    }
 
-		inline double SRSaturation::processRectHalf(double in) {
-			in = (in < 0.) ? 0. : in;
+    inline double SRSaturation::processPirkleModified(double in) {
+      const double a = mAmount * (1. + (in - prev) * (1. / mDriveNormalized) * mSkewNormalized);
+      in = tanh(a * in) / tanh(a);
       return in;
-		}
+    }
 
-		inline double SRSaturation::processRectFull(double in) {
-			in = fabs(in);
+    inline double SRSaturation::processSoftSat(double in) {
+      in = (in > 1.)
+        ? mAmount * (1. - mAmount / (in + (mAmount - 1.))) + 1.
+        : (in < -1.)
+        ? -mAmount * (1. + mAmount / (in - (mAmount - 1.))) - 1.
+        : in;
       return in;
-		}
-	}
+    }
+
+    inline double SRSaturation::processRectHalf(double in) {
+      in = (in < 0.) ? 0. : in;
+      return in;
+    }
+
+    inline double SRSaturation::processRectFull(double in) {
+      in = fabs(in);
+      return in;
+    }
+  }
 }

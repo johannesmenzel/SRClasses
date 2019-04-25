@@ -8,6 +8,77 @@
 namespace SR {
   namespace DSP {
 
+    /*
+    Class acting as a parameter value smoother.
+    Works with linear paramter changes.
+    */
+    class SRParamSmooth {
+    public:
+      // Constructors & Destructors
+      SRParamSmooth()
+        : mCurrentValue(1.0)
+        , mTargetValue(1.0)
+        , mNumSmoothSamples(0)
+        , mNumSmoothSamplesLeft(0)
+        , mValueChangePerSample(0.0)
+      {
+      }
+
+      SRParamSmooth(double value, int numSmoothSamples)
+        : mTargetValue(value)
+        , mCurrentValue(value)
+        , mNumSmoothSamples(numSmoothSamples)
+      {
+      }
+
+      ~SRParamSmooth()
+      {
+      }
+
+      // Setters
+      void Set(double value) {
+        if (mTargetValue != value) {
+          mTargetValue = value;
+          mNumSmoothSamplesLeft = mNumSmoothSamples;
+          mValueChangePerSample = (mTargetValue - mCurrentValue) / mNumSmoothSamples;
+        }
+      }
+
+      void SetStrict(double value) {
+        mCurrentValue = mTargetValue = value;
+        mNumSmoothSamplesLeft = 0;
+        mValueChangePerSample = 0.0;
+      }
+
+      void SetNumSmoothSamples(int numSmoothSamples) {
+        mNumSmoothSamples = numSmoothSamples;
+      }
+
+      // Getters
+      double Get() { return mCurrentValue; }
+      int GetNumSmoothSamples() { return mNumSmoothSamples; }
+      int GetNumSmoothSamplesLeft() { return mNumSmoothSamplesLeft; }
+
+      inline void Process() {
+        if (mNumSmoothSamplesLeft > 0) {
+          mCurrentValue += mValueChangePerSample;
+          mNumSmoothSamplesLeft--;
+          if (mNumSmoothSamplesLeft == 0) {
+            mValueChangePerSample = 0.0;
+            mCurrentValue = mTargetValue;
+          }
+        }
+      }
+
+    protected:
+
+    private:
+      double mCurrentValue, mTargetValue;
+      int mNumSmoothSamples;
+      int mNumSmoothSamplesLeft;
+      double mValueChangePerSample;
+    };
+
     using Values = std::variant<double, float, int, bool>;
     enum EType {
       kDouble = 0,

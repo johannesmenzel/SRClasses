@@ -13,7 +13,81 @@ namespace SR {
   namespace Graphics {
 
 
-    /** A vector knob control drawn using graphics primitves */
+
+
+
+
+    // --------------------------------------------------------------------------------
+    // KNOB PARTS
+    // --------------------------------------------------------------------------------
+
+    class SRKnobParts {
+    public:
+      enum EKnobParts {
+        kLabelring = 0,
+        kFrame,
+        kHandle,
+        kNumKnobParts
+      };
+
+      enum EKnobTypes {
+        kSolid = 0,
+        kChicken,
+        kTec,
+        kMoog,
+        kNumKnobTypes
+      };
+
+      SRKnobParts(EKnobParts knobpart, EKnobTypes knobtype, float cx = 0.f, float cy = 0.f, float r = 50.f, float lightOffsetX = 0.f, float lightOffsetY = 0.f)
+      {
+        SetProperties(knobpart, knobtype, cx, cy, r, lightOffsetX, lightOffsetY);
+      }
+
+      ~SRKnobParts() {}
+
+      void SetProperties(EKnobParts knobpart, EKnobTypes knobtype, float cx, float cy, float r, float lightOffsetX, float lightOffsetY) {
+        mKnobtype = knobtype;
+        mKnobpart = knobpart;
+        mCx = cx;
+        mCy = cy;
+        mR = r;
+        mLightOffsetX = lightOffsetX;
+        mLightOffsetY = lightOffsetY;
+      }
+
+      void DrawPart(IGraphics& g) {
+
+      }
+
+      struct Label {
+        IColor mTextColor = DEFAULT_TEXT_FGCOLOR;
+      } mLabel;
+
+      struct Frame {
+        IPattern mPattern = IPattern(DEFAULT_FRCOLOR);
+      } mFrame;
+
+      struct Handle {
+        IPattern mPattern = IPattern(DEFAULT_FGCOLOR);
+      } mHandle;
+
+    protected:
+
+    private:
+      EKnobParts mKnobpart = EKnobParts::kFrame;
+      EKnobTypes mKnobtype = EKnobTypes::kSolid;
+      float mCx = 0.f;
+      float mCy = 0.f;
+      float mR = 50.f;
+      float mLightOffsetX = 0.f;
+      float mLightOffsetY = 0.f;
+    };
+
+
+    // --------------------------------------------------------------------------------
+    // KNOB
+    // --------------------------------------------------------------------------------
+
     class SRVectorKnobText
       : public IKnobControlBase
       , public IVectorBase
@@ -23,25 +97,19 @@ namespace SR {
         const char* label = "", const char* minLabel = "", const char* maxLabel = "", const char* ctrLabel = "", bool drawCircleLabels = false, bool displayParamValue = false,
         const IVColorSpec& colorSpec = DEFAULT_SPEC, const IColor& color = DEFAULT_FGCOLOR,
         const IText& labelText = IText(DEFAULT_TEXT_SIZE + 5, IText::kVAlignTop), const IText& valueText = IText(DEFAULT_TEXT_SIZE, IText::kVAlignBottom),
-        float aMin = -135.f, float aMax = 135.f, float aDef = 0.f, float knobFrac = 0.50f,
-        EDirection direction = kVertical, double gearing = DEFAULT_GEARING);
-
-      SRVectorKnobText(IRECT bounds, IActionFunction actionFunction,
-        const char* label = "", const char* minLabel = "", const char* maxLabel = "", const char* ctrLabel = "", bool drawCircleLabels = false, bool displayParamValue = false,
-        const IVColorSpec& colorSpec = DEFAULT_SPEC, const IColor& color = DEFAULT_FGCOLOR,
-        const IText& labelText = IText(DEFAULT_TEXT_SIZE + 5, IText::kVAlignTop), const IText& valueText = IText(DEFAULT_TEXT_SIZE, IText::kVAlignBottom),
-        float aMin = -135.f, float aMax = 135.f, float aDef = 0.f, float knobFrac = 0.50f,
+        float aMin = -135.f, float aMax = 135.f, float knobFrac = 0.50f,
         EDirection direction = kVertical, double gearing = DEFAULT_GEARING);
 
       virtual ~SRVectorKnobText() {}
 
       void Draw(IGraphics& g) override;
       void OnMouseDown(float x, float y, const IMouseMod& mod) override;
-      //void OnInit() override;
+      void OnInit() override;
       void OnResize() override;
       //void GrayOut(bool gray) override;
       float GetPercW() { return mCenterX / GetDelegate()->GetEditorWidth(); }
       float GetPercH() { return mCenterY / GetDelegate()->GetEditorHeight(); }
+
       IColor ColorGetAltered(IColor pColor, float change) {
         IColor color = pColor;
         color.R = int(color.R * change); color.R = (color.R > 255) ? 255 : color.R;
@@ -49,7 +117,6 @@ namespace SR {
         color.G = int(color.G * change); color.G = (color.G > 255) ? 255 : color.G;
         return color;
       }
-
 
 
     protected:
@@ -84,6 +151,8 @@ namespace SR {
       IShadow mShadowFrame;
       IShadow mShadowHead;
       IShadow mShadowArrow;
+      IStrokeOptions mStrokeOptions;
+      IFillOptions mFillOptions;
       const struct KnobScaleVals
       {
         const float relRadius = 1.f;
@@ -109,7 +178,7 @@ namespace SR {
       , public IVectorBase
     {
     public:
-      SRVectorSwitch(IRECT bounds, int paramIdx = kNoParameter, IActionFunction actionFunc = FlashCircleClickActionFunc,
+      SRVectorSwitch(IRECT bounds, int paramIdx = kNoParameter, IActionFunction actionFunc = SplashClickActionFunc,
         const char* label = "", const IVColorSpec& colorSpec = DEFAULT_SPEC, int numStates = 2);
 
       void Draw(IGraphics& g) override;
@@ -365,7 +434,7 @@ namespace SR {
         , mMaxTrackValue(4.f)
         , mMarkStep(markStep)
         , mLabelStep(labelStep)
-        , mText(IText(14, COLOR_LIGHT_GRAY, DEFAULT_FONT, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignMiddle, 0, IText::kQualityClearType))
+        , mText(IText(14, COLOR_LIGHT_GRAY, DEFAULT_FONT, IText::kAlignCenter, IText::kVAlignMiddle))
         , mNumLines(int(maxDb - minDb))
         , mNumLabels(int((maxDb - minDb) / labelStep))
         , rectLabelFrame(IRECT())
@@ -632,7 +701,7 @@ namespace SR {
           //if (mY[i] == mRECT.T && mY[i-1] == mRECT.T || mY[i] == mRECT.B && mY[i - 1] == mRECT.B)
           //  g.PathMoveTo(mX[i], mY[i]);
           //else
-            g.PathLineTo(mX[i], mY[i]);
+          g.PathLineTo(mX[i], mY[i]);
         }
         g.PathLineTo(mRECT.R, mRECT.MH());
         g.PathStroke(GetColor(kFG), mFrameThickness);
@@ -641,7 +710,7 @@ namespace SR {
       void OnResize() override {
         for (int i = 0; i < mNumValues; i++) {
           mX[i] = mRECT.L + (mRECT.W() / (mNumValues - 1.f)) * float(i);
-          mY[i] = mRECT.MH() - (mRECT.H() * mValues[i] * 0.5f);
+          mY[i] = mRECT.MH() - (mRECT.H() * (float)mValues[i] * 0.5f);
         }
         SetDirty(false);
       }
@@ -692,7 +761,7 @@ namespace SR {
         g.PathMoveTo(mRECT.L, mRECT.MH());
 
         for (int i = 0; i < mNumValues; i++) {
-          const float y = mRECT.MH() - (mValues[i] * 0.5 * mRECT.H());
+          const float y = mRECT.MH() - ((float)mValues[i] * 0.5f * mRECT.H());
           const float x = mRECT.L + ((float)i / ((float)mNumValues - 1.f)) * mRECT.W();
           g.PathLineTo(x, y);
         }
