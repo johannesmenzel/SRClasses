@@ -129,8 +129,15 @@ namespace SR {
       // Advanced compressor auto makeup calculation with time constants
       virtual double AutoMakeup(double threshDb, double ratio, double referenceDb, double attackMs, double releaseMs) { return	1. + (1. / (Utils::DBToAmp(((ratio - 1.) * -threshDb) / 2.)) - 1.) * sqrt(threshDb / referenceDb) * (sqrt(30.) / sqrt(attackMs)) * (sqrt(releaseMs) / sqrt(5000.)); }
 
+      virtual double AutoMakeup(double threshDb, double ratio, double referenceDb) {
+        if (referenceDb > threshDb)
+          return Utils::DBToAmp((ratio - 1.) * (referenceDb - threshDb));
+        else
+          return 1.;
+      }
+
       // Simple compressor auto makeup calculation based on threshold and ratio
-      virtual double AutoMakeup(double threshDb, double ratio) { return Utils::DBToAmp((ratio - 1.0) * threshDb); }
+      virtual double AutoMakeup(double threshDb, double ratio) { return Utils::DBToAmp((ratio - 1.) * threshDb); }
 
       virtual double GetThresh(void) const { return mThreshDb; }      // Returns dynamic processors logarithmic threshold
       virtual double GetThreshLin(void) const { return mThreshLin; }  // Returns dynamic processors linear threshold
