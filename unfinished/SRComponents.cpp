@@ -10,7 +10,7 @@ namespace SRComponents
 SRTube::SRTube()
 {
 	// declare variable values so that non empty
-	mType = typeMusicDSP;
+	mType = typemusi;
 	// member variables
 	mDriveNormalized = 1.;
 	mAmountNormalized = 0.;

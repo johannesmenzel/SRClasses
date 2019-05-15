@@ -9,7 +9,7 @@ How is the buffer implemented?
 #ifndef SRBUFFER_H
 #define SRBUFFER_H
 
-#include "IPlug_include_in_plug_hdr.h"
+//#include "IGraphics_include_in_plug_hdr.h"
 #include <cassert>
 
 #if BUFFERIMPL == 1 // vec

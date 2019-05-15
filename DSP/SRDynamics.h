@@ -61,12 +61,27 @@ namespace SR {
     // 
     class EnvelopeDetector {
     public:
-      EnvelopeDetector(double ms = 1.0, double sampleRate = 44100.0);
+      EnvelopeDetector(double ms = 1.0, double sampleRate = 44100.0)
+      {
+        assert(sampleRate > 0.0);
+        assert(ms > 0.0);
+        mSampleRate = sampleRate;
+        mTimeConstantMs = (ms > 1000. / mSampleRate) ? ms : 1000. / mSampleRate;
+        setCoef();
+      }
       virtual ~EnvelopeDetector() {}
 
-      virtual void   setTc(double ms);
+      virtual void   setTc(double ms) {
+        assert(ms > 0.0);
+        mTimeConstantMs = (ms > 1000. / mSampleRate) ? ms : 1000. / mSampleRate;
+        setCoef();
+      }
       virtual double getTc(void) const { return mTimeConstantMs; }
-      virtual void   setSampleRate(double sampleRate);
+      virtual void   setSampleRate(double sampleRate) {
+        assert(sampleRate > 0.0);
+        mSampleRate = sampleRate;
+        setCoef();
+      }
       virtual double getSampleRate(void) const { return mSampleRate; }
 
       // Runtime method of Envelope detector
@@ -78,7 +93,9 @@ namespace SR {
       double mSampleRate;           // Envelope detectors samplerate
       double mTimeConstantMs;       // Envelope detectors time constant in ms
       double mRuntimeCoeff;			    // Envelope detectors runtime coefficient
-      virtual void setCoef(void);	  // Envelope detectors coefficient calculation
+      virtual void setCoef(void) {
+        mRuntimeCoeff = exp(-1000.0 / (mTimeConstantMs * mSampleRate));
+      }	  // Envelope detectors coefficient calculation
     };
 
 
@@ -86,14 +103,28 @@ namespace SR {
     // Holds attack AND release parameters
     class AttRelEnvelope {
     public:
-      AttRelEnvelope(double mAttackMs = 10.0, double mReleaseMs = 100.0, double sampleRate = 44100.0);
+      //-------------------------------------------------------------
+      // Attack/release envelope
+      //-------------------------------------------------------------
+      AttRelEnvelope(double mAttackMs = 10.0, double mReleaseMs = 100.0, double sampleRate = 44100.0)
+        : mEnvelopeDetectorAttack(mAttackMs, sampleRate)
+        , mEnvelopeDetectorRelease(mReleaseMs, sampleRate)
+      {
+      }
       virtual ~AttRelEnvelope() {}
 
-      virtual void   SetAttack(double ms);
+      virtual void   SetAttack(double ms) {
+        mEnvelopeDetectorAttack.setTc(ms);
+      }
       virtual double GetAttack(void) const { return mEnvelopeDetectorAttack.getTc(); }
-      virtual void   SetRelease(double ms);
+      virtual void   SetRelease(double ms) {
+        mEnvelopeDetectorRelease.setTc(ms);
+      }
       virtual double GetRelease(void) const { return mEnvelopeDetectorRelease.getTc(); }
-      virtual void   SetSampleRate(double sampleRate);
+      virtual void   SetSampleRate(double sampleRate) {
+        mEnvelopeDetectorAttack.setSampleRate(sampleRate);
+        mEnvelopeDetectorRelease.setSampleRate(sampleRate);
+      }
       virtual double GetSampleRate(void) const { return mEnvelopeDetectorAttack.getSampleRate(); }
 
       // runtime function
@@ -116,15 +147,53 @@ namespace SR {
     class SRDynamicsBase
     {
     public:
-      SRDynamicsBase(double threshDb = 0.0, double ratio = 1.0, bool autoMakeup = false);
+      //-------------------------------------------------------------
+      // SRDynamicsBase methods
+      //-------------------------------------------------------------
+      SRDynamicsBase(double threshDb = 0.0, double ratio = 1.0, bool autoMakeup = false)
+        : mThreshDb(threshDb)
+        , mThreshLin(Utils::DBToAmp(threshDb))
+        , mRatio(ratio)
+        , mMakeup(1.0)
+        , mKneeWidthDb(0.0)
+        , mGrDb(0.0)
+        , mGrLin(1.0)
+        , currentOvershootDb(DC_OFFSET)
+        , currentOvershootLin(SR::Utils::DBToAmp(DC_OFFSET))
+        , mAverageOfSquares(DC_OFFSET)
+        , mIsAutoMakeup(autoMakeup)
+        , mAutoMakeup(1.0)
+      {
+      }
       virtual ~SRDynamicsBase() {}
 
-      virtual void SetThresh(double threshDb);    // Sets dynamic processors threshold in dB
-      virtual void SetRatio(double ratio);        // Sets dynamic processors ratio
-      virtual void SetMakeup(double makeupDb);    // Sets dynamic processors makeup gain in dB
-      virtual void SetIsAutoMakeup(bool autoMakeup);// Sets if dynamic processor compensates gain reduction automatically
-      virtual void SetKnee(double kneeDb);        // Sets soft knee width in dB
-      virtual void Reset(void);                   // Call before runtime, typically in OnReset() or similar
+      virtual void SetThresh(double threshDb) {
+        mThreshDb = threshDb;
+        mThreshLin = SR::Utils::DBToAmp(threshDb);
+        if (mIsAutoMakeup)
+          mAutoMakeup = AutoMakeup(mThreshDb, mRatio);
+      }    // Sets dynamic processors threshold in dB
+      virtual void SetRatio(double ratio) {
+        assert(ratio >= 0.0);
+        mRatio = ratio;
+        if (mIsAutoMakeup)
+          mAutoMakeup = AutoMakeup(mThreshDb, mRatio);
+      }        // Sets dynamic processors ratio
+      virtual void SetMakeup(double makeupDb) {
+        mMakeup = SR::Utils::DBToAmp(makeupDb);
+      }    // Sets dynamic processors makeup gain in dB
+      virtual void SetIsAutoMakeup(bool autoMakeup) {
+        mIsAutoMakeup = autoMakeup;
+      }// Sets if dynamic processor compensates gain reduction automatically
+      virtual void SetKnee(double kneeDb) {
+        assert(kneeDb >= 0.0);
+        mKneeWidthDb = kneeDb;
+      }        // Sets soft knee width in dB
+      virtual void Reset(void) {
+        currentOvershootDb = DC_OFFSET;
+        currentOvershootLin = SR::Utils::DBToAmp(DC_OFFSET);
+        mAverageOfSquares = DC_OFFSET;
+      }                   // Call before runtime, typically in OnReset() or similar
 
       // Advanced compressor auto makeup calculation with time constants
       virtual double AutoMakeup(double threshDb, double ratio, double referenceDb, double attackMs, double releaseMs) { return	1. + (1. / (Utils::DBToAmp(((ratio - 1.) * -threshDb) / 2.)) - 1.) * sqrt(threshDb / referenceDb) * (sqrt(30.) / sqrt(attackMs)) * (sqrt(releaseMs) / sqrt(5000.)); }
@@ -170,15 +239,52 @@ namespace SR {
       , public SRDynamicsBase
     {
     public:
-      SRCompressor();
+      //-------------------------------------------------------------
+      // SRCompressor methods
+      //-------------------------------------------------------------
+      SRCompressor()
+        : AttRelEnvelope(10.0, 100.0)
+        , SRDynamicsBase(0.0, 1.0)
+        , mSidechainFc(0.0)
+        , mTopologyFeedback(false)
+        , mMaxGr(0.0)
+        , sidechainSignal1(0.0)
+        , sidechainSignal2(0.0)
+      {
+      }
       virtual ~SRCompressor() {}
 
       // parameters
-      virtual void InitCompressor(double threshDb, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, bool isFeedbackCompressor, bool autoMakeup, double samplerate);
-      virtual void SetMaxGrDb(double maxGrDb, bool sigmoid = true);
-      virtual void InitSidechainFilter(double sidechainFC);
-      virtual void SetSidechainFilterFreq(double sidechainFc);
-      virtual void SetTopologyFeedback(bool isFeedbackCompressor);
+      virtual void InitCompressor(double threshDb, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, bool isFeedbackCompressor, bool autoMakeup, double samplerate) {
+        AttRelEnvelope::SetSampleRate(samplerate);
+        SRDynamicsBase::SetThresh(threshDb);
+        SRDynamicsBase::SetRatio(ratio);
+        SRDynamicsBase::SetIsAutoMakeup(autoMakeup);
+        AttRelEnvelope::SetAttack(attackMs);
+        AttRelEnvelope::SetRelease(releaseMs);
+        InitSidechainFilter(sidechainFc);
+        SRDynamicsBase::SetKnee(kneeDb);
+        SetTopologyFeedback(isFeedbackCompressor);
+      }
+      virtual void SetMaxGrDb(double maxGrDb, bool sigmoid = true) {
+        if (!sigmoid)
+          mMaxGr = maxGrDb;
+        else {
+          const double tempratio = 1. / mRatio;
+          mMaxGr = (maxGrDb + (maxGrDb * 9.) / (maxGrDb * tempratio - maxGrDb - 9.)); // Simplified P4 sigmoid fitting with d+\frac{da}{dx-d-a} with f(1) = 0.0
+        }
+      }
+      virtual void InitSidechainFilter(double sidechainFC) {
+        mSidechainFc = sidechainFC;
+        fSidechainFilter.SetFilter(SRFilterIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFC, 0.7071, 0., AttRelEnvelope::GetSampleRate());
+      }
+      virtual void SetSidechainFilterFreq(double sidechainFc) {
+        mSidechainFc = sidechainFc;
+        fSidechainFilter.SetFreq(mSidechainFc);
+      }
+      virtual void SetTopologyFeedback(bool isFeedbackCompressor) {
+        mTopologyFeedback = isFeedbackCompressor;
+      }
 
       void Process(double &in1, double &in2); // Compressor runtime process for internal sidechain 
       void Process(double &in1, double &in2, double &extSC1, double &extSC2); // Compressor runtime process for external sidechain
@@ -199,15 +305,36 @@ namespace SR {
       : public SRCompressor
     {
     public:
-      SRCompressorRMS();
+      // SRCompressorRMS methods
+      //-------------------------------------------------------------
+      SRCompressorRMS()
+        : mEnvelopeDetectorAverager(5.0)
+      {
+      }
       virtual ~SRCompressorRMS() {}
 
       // sample rate
-      virtual void SetSampleRate(double sampleRate);
-      virtual void InitCompressor(double dB, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, double rmsWindowMs, bool isFeedbackCompressor, bool autoMakeup, double samplerate);
+      virtual void SetSampleRate(double sampleRate) {
+        SRCompressor::SetSampleRate(sampleRate);
+        mEnvelopeDetectorAverager.setSampleRate(sampleRate);
+      }
+      virtual void InitCompressor(double dB, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, double rmsWindowMs, bool isFeedbackCompressor, bool autoMakeup, double samplerate) {
+        SetSampleRate(samplerate);
+        SRDynamicsBase::SetThresh(dB);
+        SRDynamicsBase::SetRatio(ratio);
+        SRDynamicsBase::SetIsAutoMakeup(autoMakeup);
+        AttRelEnvelope::SetAttack(attackMs);
+        AttRelEnvelope::SetRelease(releaseMs);
+        SRCompressor::InitSidechainFilter(sidechainFc);
+        SRDynamicsBase::SetKnee(kneeDb);
+        SRCompressor::SetTopologyFeedback(isFeedbackCompressor);
+        mEnvelopeDetectorAverager.setTc(rmsWindowMs);
+      }
 
       // RMS window
-      virtual void SetWindow(double ms);
+      virtual void SetWindow(double ms) {
+        mEnvelopeDetectorAverager.setTc(ms);
+      }
       virtual double GetWindow(void) const { return mEnvelopeDetectorAverager.getTc(); }
 
       void Process(double &in1, double &in2, double &extSC1, double &extSC2);
@@ -348,18 +475,53 @@ namespace SR {
       : public SRDynamicsBase
     {
     public:
-      SRLimiter();
+      //-------------------------------------------------------------
+      // SRLimiter Methods
+      //-------------------------------------------------------------
+      SRLimiter()
+        : SRDynamicsBase(0.0, 1.0)
+        , mPeakHoldSamples(0)
+        , mPeakHoldTimer(0)
+        , mMaxPeak(1.0)
+        , mEnvelopeDetectorAttack(1.0)
+        , mEnvelopeDetectorRelease(10.0)
+        , mBufferMask(BUFFER_SIZE - 1)
+        , mCursor(0)
+      {
+        SetAttack(1.0);
+        mOutputBuffer[0].resize(BUFFER_SIZE, 0.0);
+        mOutputBuffer[1].resize(BUFFER_SIZE, 0.0);
+      }
       virtual ~SRLimiter() {}
 
-      virtual void SetAttack(double ms);
-      virtual void SetRelease(double ms);
+      virtual void SetAttack(double ms) {
+        unsigned int samp = int(0.001 * ms * mEnvelopeDetectorAttack.getSampleRate());
+
+        assert(samp < BUFFER_SIZE);
+
+        mPeakHoldSamples = samp;
+        mEnvelopeDetectorAttack.setTc(ms);
+      }
+      virtual void SetRelease(double ms) {
+        mEnvelopeDetectorRelease.setTc(ms);
+      }
       virtual double GetAttack(void)  const { return mEnvelopeDetectorAttack.getTc(); }
       virtual double GetRelease(void) const { return mEnvelopeDetectorRelease.getTc(); }
-      virtual void   SetSampleRate(double sampleRate);
+      virtual void   SetSampleRate(double sampleRate) {
+        mEnvelopeDetectorAttack.setSampleRate(sampleRate);
+        mEnvelopeDetectorRelease.setSampleRate(sampleRate);
+      }
       virtual double GetSampleRate(void) { return mEnvelopeDetectorAttack.getSampleRate(); }
       virtual const unsigned int GetLatency(void) const { return mPeakHoldSamples; }
 
-      virtual void Reset(void);			// call before runtime (in resume())
+      virtual void Reset(void) {
+        mPeakHoldTimer = 0;
+        mMaxPeak = mThreshLin;
+        currentOvershootLin = mThreshLin;
+        mCursor = 0;
+        mOutputBuffer[0].assign(BUFFER_SIZE, 0.0);
+        mOutputBuffer[1].assign(BUFFER_SIZE, 0.0);
+      }			// call before runtime (in resume())
       void Process(double &in1, double &in2);	// limiter runtime process
 
     protected:
@@ -374,7 +536,9 @@ namespace SR {
 
       protected:
         // override setCoef() - coefficient calculation
-        virtual void setCoef(void);
+        virtual void setCoef(void) {
+          mRuntimeCoeff = pow(0.01, (1000.0 / (mTimeConstantMs * mSampleRate))); // rises to 99% of in value over duration of time constant
+        }
       };
 
     private:
@@ -473,7 +637,11 @@ namespace SR {
       , public SRDynamicsBase
     {
     public:
-      SRGate();
+      SRGate()
+        : AttRelEnvelope(1.0, 100.0)
+        , SRDynamicsBase(0.0, 1.0)
+      {
+      }
       virtual ~SRGate() {}
 
       void Process(double &in1, double &in2);	// gate runtime process
@@ -491,14 +659,22 @@ namespace SR {
     class SRGateRMS : public SRGate
     {
     public:
-      SRGateRMS();
+      SRGateRMS()
+        : mEnvelopeDetectorAverager(5.0)
+      {
+      }
       virtual ~SRGateRMS() {}
 
       // sample rate
-      virtual void setSampleRate(double sampleRate);
+      virtual void setSampleRate(double sampleRate) {
+        SRGate::SetSampleRate(sampleRate);
+        mEnvelopeDetectorAverager.setSampleRate(sampleRate);
+      }
 
       // RMS window
-      virtual void setWindow(double ms);
+      virtual void setWindow(double ms) {
+        mEnvelopeDetectorAverager.setTc(ms);
+      }
       virtual double getWindow(void) const { return mEnvelopeDetectorAverager.getTc(); }
 
       // runtime process
@@ -582,14 +758,49 @@ namespace SR {
       , public SRDynamicsBase
     {
     public:
-      SRDeesser();
+      //-------------------------------------------------------------
+      // SRDeesser methods
+      //-------------------------------------------------------------
+      SRDeesser()
+        : AttRelEnvelope(10.0, 100.0)
+        , SRDynamicsBase(0.0, 1.0)
+        , mFilterFreq(0.5)
+        , mFilterQ(0.707)
+        , mFilterGain(0.0)
+        , fSidechainBandpass(SRFilterIIR<double, 2>(SRFilterIIR<double, 2>::EFilterType::BiquadBandpass, 0.5, 0.707, 0.0, 44100.0))
+        , fDynamicEqFilter(SRFilterIIR<double, 2>(SRFilterIIR<double, 2>::EFilterType::BiquadPeak, 0.5, 0.707, 0.0, 44100.0))
+      {
+      }
       virtual ~SRDeesser() {}
 
       // parameters
-      virtual void SetDeesser(double threshDb, double ratio, double attackMs, double releaseMs, double normalizedFreq, double q, double kneeDb, double samplerate);
-      virtual void SetFrequency(double freq);
-      virtual void SetQ(double q);
-      virtual void InitFilter(double freq, double q);
+      virtual void SetDeesser(double threshDb, double ratio, double attackMs, double releaseMs, double normalizedFreq, double q, double kneeDb, double samplerate) {
+        SRDynamicsBase::SetThresh(threshDb);
+        SRDynamicsBase::SetRatio(ratio);
+        AttRelEnvelope::SetAttack(attackMs);
+        AttRelEnvelope::SetRelease(releaseMs);
+        AttRelEnvelope::SetSampleRate(samplerate);
+        InitFilter(normalizedFreq, q);
+        SetKnee(kneeDb);
+      }
+      virtual void SetFrequency(double freq) {
+        mFilterFreq = freq;
+        fSidechainBandpass.SetFreq(mFilterFreq);
+        fDynamicEqFilter.SetFreq(mFilterFreq);
+      }
+      virtual void SetQ(double q) {
+        mFilterQ = q;
+        fSidechainBandpass.SetQ(q);
+        fDynamicEqFilter.SetQ(q);
+
+
+      }
+      virtual void InitFilter(double freq, double q) {
+        mFilterFreq = freq;
+        mFilterQ = q;
+        fSidechainBandpass.SetFilter(SRFilterIIR<double, 2>::EFilterType::BiquadBandpass, mFilterFreq, mFilterQ, 0.0, GetSampleRate());
+        fDynamicEqFilter.SetFilter(SRFilterIIR<double, 2>::EFilterType::BiquadPeak, mFilterFreq, mFilterQ, 0.0, GetSampleRate());
+      }
 
       void Process(double &in1, double &in2); // compressor runtime process if internal sidechain 
       void process(double &in1, double &in2, double sidechain);	// with stereo-linked key in

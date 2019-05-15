@@ -11,41 +11,9 @@
     <Filter Include="Graphics">
       <UniqueIdentifier>{cdc7831f-0804-474d-be26-62a6e8be28df}</UniqueIdentifier>
     </Filter>
-    <Filter Include="OFFLINE">
-      <UniqueIdentifier>{2faee846-dde0-4237-b781-695bf5d7cb12}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Utils">
       <UniqueIdentifier>{0d43aafb-c2f4-4385-9b98-357d00655108}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="utils\SRHelpers.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="dsp\SRSaturation.cpp">
-      <Filter>DSP</Filter>
-    </ClCompile>
-    <ClCompile Include="dsp\SRGain.cpp">
-      <Filter>DSP</Filter>
-    </ClCompile>
-    <ClCompile Include="dsp\SRFilters.cpp">
-      <Filter>DSP</Filter>
-    </ClCompile>
-    <ClCompile Include="dsp\SRDynamics.cpp">
-      <Filter>DSP</Filter>
-    </ClCompile>
-    <ClCompile Include="unfinished\SRComponents.cpp">
-      <Filter>DSP</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\SRParam.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="graphics\SRControls.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="unfinished\SRGenericClass.cpp">
-      <Filter>OFFLINE</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils\SRHelpers.h">
@@ -63,9 +31,6 @@
     <ClInclude Include="dsp\SRDynamics.h">
       <Filter>DSP</Filter>
     </ClInclude>
-    <ClInclude Include="unfinished\SRComponents.h">
-      <Filter>DSP</Filter>
-    </ClInclude>
     <ClInclude Include="dsp\SRBuffer.h">
       <Filter>DSP</Filter>
     </ClInclude>
@@ -75,9 +40,6 @@
     <ClInclude Include="SRConstants.h" />
     <ClInclude Include="graphics\SRControls.h">
       <Filter>Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="unfinished\SRGenericClass.h">
-      <Filter>OFFLINE</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

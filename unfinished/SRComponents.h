@@ -27,7 +27,7 @@
 #ifndef SRComponents_h
 #define SRComponents_h
 
-#include "SRHelpers.h"
+#include "../Utils/SRHelpers.h"
 // #include this and that
 
 namespace SRPlugins
@@ -111,8 +111,8 @@ inline void SRTube::process(double &in1, double &in2)
 	// process
 	// ..
 
-	in1 = in1PrevSample
-		in2 = in2PrevSample
+  in1 = in1PrevSample;
+  in2 = in2PrevSample;
 }
 
 } // namespace SRComponents
