@@ -14,7 +14,19 @@ namespace SR {
 
 
 
-
+    struct LightInfo {
+    public:
+      LightInfo(float x, float y, float z)
+        : mLightX(x)
+        , mLightY(y)
+        , mLightZ(z)
+      {
+      }
+    private:
+      float mLightX;
+      float mLightY;
+      float mLightZ;
+    };
 
 
     // --------------------------------------------------------------------------------
@@ -183,7 +195,7 @@ namespace SR {
 
       void Draw(IGraphics& g) override;
 
-      void SetDirty(bool push) override;
+      void SetDirty(bool push, int valIdx = kNoValIdx) override;
 
       IRECT DrawVectorButton(IGraphics&g, const IRECT& bounds, bool pressed, bool mouseOver);
 

@@ -58,8 +58,8 @@ namespace SR {
 
     void SRVectorKnobText::Draw(IGraphics& g) {
       // These values have to be calculated if value changed
-      const float mAngleValue = mAngleMin + ((float)mValue * (mAngleMax - mAngleMin));
-      const float colorIntensity = fabsf((float)mValue - (float)mDefaultValue) / fmaxf((float)mDefaultValue, (1.f - (float)mDefaultValue));
+      const float mAngleValue = mAngleMin + ((float)GetValue() * (mAngleMax - mAngleMin));
+      const float colorIntensity = fabsf((float)GetValue() - (float)GetParam()->GetDefault(true) / fmaxf((float)GetParam()->GetDefault(true), (1.f - (float)GetParam()->GetDefault(true))));
       IColor arcColor;
       IColor::LinearInterpolateBetween(GetColor(kBG), mColor, arcColor, 0.3f + 0.5f * colorIntensity);
 
@@ -412,7 +412,7 @@ namespace SR {
       mStr.Set(str);
     }
 
-    void SRVectorSwitch::SetDirty(bool push)
+    void SRVectorSwitch::SetDirty(bool push, int valIdx)
     {
       IControl::SetDirty(push);
 
@@ -455,7 +455,7 @@ namespace SR {
       }
       else {
         // Normal button state
-        if (mNumStates > 2 || mValue == 0) {
+        if (mNumStates > 2 || GetValue() == 0) {
           //outer shadow
           if (mDrawShadows && !mEmboss) g.FillRoundRect(GetColor(kSH), handleBounds, cornerRadius);
           g.FillRoundRect(GetColor(kFG), handleBounds, cornerRadius);
@@ -557,26 +557,26 @@ namespace SR {
 
       menuMain.SetPrefix(0);
 
-      if (g.CreatePopupMenu(menuMain, mRECT)) {
-        int itemChosen = menuMain.GetChosenItemIdx();
+      g.CreatePopupMenu(*this, menuMain, mRECT);
+      int itemChosen = menuMain.GetChosenItemIdx();
 
-        if (itemChosen > -1 && itemChosen < numPresets) {
-          mPlug->RestorePreset(itemChosen);
-          mPlug->InformHostOfProgramChange();
-          mPlug->DirtyParametersFromUI();
-        }
-        else {
-          //const int numParams = mPlug->NParams();
-          //const char** enumNames = new const char*[numParams];
-          //for (int i = 0; i < mPlug->NParams(); i++) {
-          //  enumNames[i] = mPlug->GetParamGroupName(i);
-          //}
-          WDL_String filename, path;
-          GetUI()->PromptForFile(filename, path, EFileAction::kFileSave, "txt");
-          mPlug->DumpPresetSrcCode(filename.Get(), mNamedParams);
-        }
+      if (itemChosen > -1 && itemChosen < numPresets) {
+        mPlug->RestorePreset(itemChosen);
+        mPlug->InformHostOfProgramChange();
+        mPlug->DirtyParametersFromUI();
+      }
+      else {
+        //const int numParams = mPlug->NParams();
+        //const char** enumNames = new const char*[numParams];
+        //for (int i = 0; i < mPlug->NParams(); i++) {
+        //  enumNames[i] = mPlug->GetParamGroupName(i);
+        //}
+        WDL_String filename, path;
+        GetUI()->PromptForFile(filename, path, EFileAction::kFileSave, "txt");
+        mPlug->DumpPresetSrcCode(filename.Get(), mNamedParams);
       }
     }
+
     void SRPresetMenu::TextFromTextEntry(const char * txt) {
       WDL_String safeName;
       safeName.Set(txt, MAX_PRESET_NAME_LEN);

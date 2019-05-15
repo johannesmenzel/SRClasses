@@ -133,6 +133,7 @@ enum EControlImages {
 };
 
 // Plugin constants
+
 const struct {
   const IColor colorPanelBG = IColor(255, 37, 53, 69);
   const IColor colorPluginBG = IColor(255, 13, 18, 23);
