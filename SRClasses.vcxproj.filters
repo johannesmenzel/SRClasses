@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="DSP">
+      <UniqueIdentifier>{35a21160-32be-4850-b8e2-ae1a2c31f6af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{cdc7831f-0804-474d-be26-62a6e8be28df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OFFLINE">
+      <UniqueIdentifier>{2faee846-dde0-4237-b781-695bf5d7cb12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{0d43aafb-c2f4-4385-9b98-357d00655108}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="utils\SRHelpers.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="dsp\SRSaturation.cpp">
+      <Filter>DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="dsp\SRGain.cpp">
+      <Filter>DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="dsp\SRFilters.cpp">
+      <Filter>DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="dsp\SRDynamics.cpp">
+      <Filter>DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="unfinished\SRComponents.cpp">
+      <Filter>DSP</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\SRParam.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics\SRControls.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="unfinished\SRGenericClass.cpp">
+      <Filter>OFFLINE</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="utils\SRHelpers.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="dsp\SRSaturation.h">
+      <Filter>DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="dsp\SRGain.h">
+      <Filter>DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="dsp\SRFilters.h">
+      <Filter>DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="dsp\SRDynamics.h">
+      <Filter>DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="unfinished\SRComponents.h">
+      <Filter>DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="dsp\SRBuffer.h">
+      <Filter>DSP</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\SRParam.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="SRConstants.h" />
+    <ClInclude Include="graphics\SRControls.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="unfinished\SRGenericClass.h">
+      <Filter>OFFLINE</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

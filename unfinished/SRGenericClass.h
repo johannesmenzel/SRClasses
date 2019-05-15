@@ -28,7 +28,7 @@
 #define SRGenericClass_h
 
 // #include this and that
-#include "SRHelpers.h" // optional
+#include "../Utils/SRHelpers.h" //optional
 
 namespace SRPlugins
 {
