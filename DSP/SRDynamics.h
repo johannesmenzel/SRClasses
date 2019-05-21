@@ -163,6 +163,7 @@ namespace SR {
         , mAverageOfSquares(DC_OFFSET)
         , mIsAutoMakeup(autoMakeup)
         , mAutoMakeup(1.0)
+        , mReferenceDb(0.0)
       {
       }
       virtual ~SRDynamicsBase() {}
@@ -171,24 +172,35 @@ namespace SR {
         mThreshDb = threshDb;
         mThreshLin = SR::Utils::DBToAmp(threshDb);
         if (mIsAutoMakeup)
-          mAutoMakeup = AutoMakeup(mThreshDb, mRatio);
+          mAutoMakeup = AutoMakeup(mThreshDb, mRatio, mReferenceDb);
       }    // Sets dynamic processors threshold in dB
+
       virtual void SetRatio(double ratio) {
         assert(ratio >= 0.0);
         mRatio = ratio;
         if (mIsAutoMakeup)
-          mAutoMakeup = AutoMakeup(mThreshDb, mRatio);
+          mAutoMakeup = AutoMakeup(mThreshDb, mRatio, mReferenceDb);
       }        // Sets dynamic processors ratio
+
       virtual void SetMakeup(double makeupDb) {
         mMakeup = SR::Utils::DBToAmp(makeupDb);
       }    // Sets dynamic processors makeup gain in dB
+
       virtual void SetIsAutoMakeup(bool autoMakeup) {
         mIsAutoMakeup = autoMakeup;
       }// Sets if dynamic processor compensates gain reduction automatically
+
+      virtual void SetReference(double referenceDb) {
+        mReferenceDb = referenceDb;
+        if (mIsAutoMakeup)
+          mAutoMakeup = AutoMakeup(mThreshDb, mRatio, mReferenceDb);
+      } // Sets target loudness of the track
+
       virtual void SetKnee(double kneeDb) {
         assert(kneeDb >= 0.0);
         mKneeWidthDb = kneeDb;
       }        // Sets soft knee width in dB
+
       virtual void Reset(void) {
         currentOvershootDb = DC_OFFSET;
         currentOvershootLin = SR::Utils::DBToAmp(DC_OFFSET);
@@ -200,7 +212,7 @@ namespace SR {
 
       virtual double AutoMakeup(double threshDb, double ratio, double referenceDb) {
         if (referenceDb > threshDb)
-          return Utils::DBToAmp((ratio - 1.) * (referenceDb - threshDb));
+          return Utils::DBToAmp((ratio - 1.) * (threshDb - referenceDb));
         else
           return 1.;
       }
@@ -226,6 +238,7 @@ namespace SR {
       double currentOvershootDb;      // Logarithmic over-threshold envelope
       double currentOvershootLin;     // Linear over-threshold envelope
       double mAverageOfSquares;       // Dynamic processors gain detectors average of squares
+      double mReferenceDb;
       bool mIsAutoMakeup;
       double mAutoMakeup;
     };
@@ -255,11 +268,12 @@ namespace SR {
       virtual ~SRCompressor() {}
 
       // parameters
-      virtual void InitCompressor(double threshDb, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, bool isFeedbackCompressor, bool autoMakeup, double samplerate) {
+      virtual void InitCompressor(double threshDb, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, bool isFeedbackCompressor, bool autoMakeup, double referenceDb, double samplerate) {
         AttRelEnvelope::SetSampleRate(samplerate);
         SRDynamicsBase::SetThresh(threshDb);
         SRDynamicsBase::SetRatio(ratio);
         SRDynamicsBase::SetIsAutoMakeup(autoMakeup);
+        SRDynamicsBase::SetReference(referenceDb);
         AttRelEnvelope::SetAttack(attackMs);
         AttRelEnvelope::SetRelease(releaseMs);
         InitSidechainFilter(sidechainFc);
