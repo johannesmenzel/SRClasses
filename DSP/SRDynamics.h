@@ -59,27 +59,26 @@ namespace SR {
 
 
     // Envelope Detector class
-    // 
-    class EnvelopeDetector {
+    // This is basically a one-pole lowpass
+    class SRDynamicsEnvelope {
     public:
-
-      EnvelopeDetector(double ms = 1.0, double sampleRate = 44100.0)
+      SRDynamicsEnvelope(double ms = 1.0, double sampleRate = 44100.0)
       {
         assert(sampleRate > 0.0);
         assert(ms > 0.0);
         mSampleRate = sampleRate;
-        mTimeConstantMs = (ms > 1000. / mSampleRate) ? ms : 1000. / mSampleRate;
+        mTimeConstantMs = std::max(ms, 1. / mSampleRate);
         setCoef();
       }
 
-      virtual ~EnvelopeDetector() {}
+      virtual ~SRDynamicsEnvelope() {}
 
       virtual double getTc(void) const { return mTimeConstantMs; }
       virtual double getSampleRate(void) const { return mSampleRate; }
 
       virtual void setTc(double ms) {
         assert(ms > 0.0);
-        mTimeConstantMs = (ms > 1000. / mSampleRate) ? ms : 1000. / mSampleRate;
+        mTimeConstantMs = std::max(ms, 1. / mSampleRate);
         setCoef();
       }
 
@@ -89,9 +88,8 @@ namespace SR {
         setCoef();
       }
 
-
       // Runtime method of Envelope detector
-      INLINE void run(double in, double &state) {
+      INLINE void process(double in, double &state) {
         state = in + mRuntimeCoeff * (state - in);
       }
 
@@ -108,43 +106,49 @@ namespace SR {
 
     // Attack/Release envelope class
     // Holds attack AND release parameters
-    class AttRelEnvelope {
+    class SRDynamicsDetector {
     public:
       //-------------------------------------------------------------
       // Attack/release envelope
       //-------------------------------------------------------------
-      AttRelEnvelope(double mAttackMs = 10.0, double mReleaseMs = 100.0, double sampleRate = 44100.0)
-        : mEnvelopeDetectorAttack(mAttackMs, sampleRate)
-        , mEnvelopeDetectorRelease(mReleaseMs, sampleRate)
+      SRDynamicsDetector (double mAttackMs = 10.0, double mReleaseMs = 100.0, double sampleRate = 44100.0)
+        : mEnvelopeAttack(mAttackMs, sampleRate)
+        , mEnvelopeRelease(mReleaseMs, sampleRate)
       {
       }
-      virtual ~AttRelEnvelope() {}
+      virtual ~SRDynamicsDetector() {}
 
-      virtual double GetAttack(void) const { return mEnvelopeDetectorAttack.getTc(); }
-      virtual double GetRelease(void) const { return mEnvelopeDetectorRelease.getTc(); }
-      virtual double GetSampleRate(void) const { return mEnvelopeDetectorAttack.getSampleRate(); }
+      virtual double GetAttack(void) const { return mEnvelopeAttack.getTc(); }
+      virtual double GetRelease(void) const { return mEnvelopeRelease.getTc(); }
+      virtual double GetSampleRate(void) const { return mEnvelopeAttack.getSampleRate(); }
 
-      virtual void SetAttack(double ms) { mEnvelopeDetectorAttack.setTc(ms); }
-      virtual void SetRelease(double ms) { mEnvelopeDetectorRelease.setTc(ms); }
+      virtual void SetAttack(double ms) { mEnvelopeAttack.setTc(ms); }
+      virtual void SetRelease(double ms) { mEnvelopeRelease.setTc(ms); }
       virtual void SetSampleRate(double sampleRate) {
-        mEnvelopeDetectorAttack.setSampleRate(sampleRate);
-        mEnvelopeDetectorRelease.setSampleRate(sampleRate);
+        mEnvelopeAttack.setSampleRate(sampleRate);
+        mEnvelopeRelease.setSampleRate(sampleRate);
       }
 
       // RUNTIME
-      INLINE void run(double in, double &state) {
+      INLINE void process(double in, double &state) {
         if (in > state)
-          mEnvelopeDetectorAttack.run(in, state);
+          mEnvelopeAttack.process(in, state);
         else
-          mEnvelopeDetectorRelease.run(in, state);
+          mEnvelopeRelease.process(in, state);
       }
 
     private:
-      EnvelopeDetector mEnvelopeDetectorAttack;
-      EnvelopeDetector mEnvelopeDetectorRelease;
+      SRDynamicsEnvelope mEnvelopeAttack;
+      SRDynamicsEnvelope mEnvelopeRelease;
     };
 
+    //class SRDynamicsGainStage {
 
+    //};
+
+    //class SRDynamicsGainComputer {
+
+    //};
 
     // Dynamics base class
     // Holds standard static members of any basic dynamic processor and can be inherited from
@@ -167,8 +171,8 @@ namespace SR {
         , mIsAutoMakeup(autoMakeup)
         , mAutoMakeup(1.0)
         , mReferenceDb(0.0)
-        , fMakeup(1000)
-        , fAutoMakeup(1000)
+        , fMakeup(100)
+        , fAutoMakeup(100)
       {
       }
 
@@ -275,7 +279,7 @@ namespace SR {
     // COMPRESSOR Class
     //-------------------------------------------------------------
     class SRCompressor
-      : public AttRelEnvelope
+      : public SRDynamicsDetector
       , public SRDynamicsBase
     {
     public:
@@ -283,7 +287,7 @@ namespace SR {
       // SRCompressor methods
       //-------------------------------------------------------------
       SRCompressor()
-        : AttRelEnvelope(10.0, 100.0)
+        : SRDynamicsDetector(10.0, 100.0)
         , SRDynamicsBase(0.0, 1.0)
         , mSidechainFc(0.0)
         , mTopologyFeedback(false)
@@ -296,13 +300,13 @@ namespace SR {
 
       // parameters
       virtual void InitCompressor(double threshDb, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, bool isFeedbackCompressor, bool autoMakeup, double referenceDb, double samplerate) {
-        AttRelEnvelope::SetSampleRate(samplerate);
+        SRDynamicsDetector::SetSampleRate(samplerate);
         SRDynamicsBase::SetThresh(threshDb);
         SRDynamicsBase::SetRatio(ratio);
         SRDynamicsBase::SetIsAutoMakeup(autoMakeup);
         SRDynamicsBase::SetReference(referenceDb);
-        AttRelEnvelope::SetAttack(attackMs);
-        AttRelEnvelope::SetRelease(releaseMs);
+        SRDynamicsDetector::SetAttack(attackMs);
+        SRDynamicsDetector::SetRelease(releaseMs);
         InitSidechainFilter(sidechainFc);
         SRDynamicsBase::SetKnee(kneeDb);
         SetTopologyFeedback(isFeedbackCompressor);
@@ -320,7 +324,7 @@ namespace SR {
 
       virtual void InitSidechainFilter(double sidechainFC) {
         mSidechainFc = sidechainFC;
-        fSidechainFilter.SetFilter(SRFilterIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFC, 0.7071, 0., AttRelEnvelope::GetSampleRate());
+        fSidechainFilter.SetFilter(SRFilterIIR<double, 2>::EFilterType::BiquadHighpass, sidechainFC, 0.7071, 0., SRDynamicsDetector::GetSampleRate());
       }
 
       virtual void SetSidechainFilterFreq(double sidechainFc) {
@@ -352,7 +356,7 @@ namespace SR {
       // SRCompressorRMS methods
       //-------------------------------------------------------------
       SRCompressorRMS()
-        : mEnvelopeDetectorAverager(5.0)
+        : mEnvelopeAverager(5.0)
       {
       }
       virtual ~SRCompressorRMS() {}
@@ -360,33 +364,33 @@ namespace SR {
       // sample rate
       virtual void SetSampleRate(double sampleRate) {
         SRCompressor::SetSampleRate(sampleRate);
-        mEnvelopeDetectorAverager.setSampleRate(sampleRate);
+        mEnvelopeAverager.setSampleRate(sampleRate);
       }
       virtual void InitCompressor(double dB, double ratio, double attackMs, double releaseMs, double sidechainFc, double kneeDb, double rmsWindowMs, bool isFeedbackCompressor, bool autoMakeup, double samplerate) {
         SetSampleRate(samplerate);
         SRDynamicsBase::SetThresh(dB);
         SRDynamicsBase::SetRatio(ratio);
         SRDynamicsBase::SetIsAutoMakeup(autoMakeup);
-        AttRelEnvelope::SetAttack(attackMs);
-        AttRelEnvelope::SetRelease(releaseMs);
+        SRDynamicsDetector::SetAttack(attackMs);
+        SRDynamicsDetector::SetRelease(releaseMs);
         SRCompressor::InitSidechainFilter(sidechainFc);
         SRDynamicsBase::SetKnee(kneeDb);
         SRCompressor::SetTopologyFeedback(isFeedbackCompressor);
-        mEnvelopeDetectorAverager.setTc(rmsWindowMs);
+        mEnvelopeAverager.setTc(rmsWindowMs);
         SRDynamicsBase::Reset();
       }
 
       // RMS window
       virtual void SetWindow(double ms) {
-        mEnvelopeDetectorAverager.setTc(ms);
+        mEnvelopeAverager.setTc(ms);
       }
-      virtual double GetWindow(void) const { return mEnvelopeDetectorAverager.getTc(); }
+      virtual double GetWindow(void) const { return mEnvelopeAverager.getTc(); }
 
       void Process(double &in1, double &in2, double &extSC1, double &extSC2);
       void Process(double &in1, double &in2);	// compressor runtime process
 
     private:
-      EnvelopeDetector mEnvelopeDetectorAverager;	// averager
+      SRDynamicsEnvelope mEnvelopeAverager;	// averager
     };
 
 
@@ -439,7 +443,7 @@ namespace SR {
       double squaredInput2 = (!mTopologyFeedback) ? in2 * in2 : sidechainSignal2 * sidechainSignal2;
       double summedSquaredInput = squaredInput1 + squaredInput2;			// power summing
       summedSquaredInput += DC_OFFSET;					// DC offset, to prevent denormal
-      mEnvelopeDetectorAverager.run(summedSquaredInput, mAverageOfSquares);		// average of squares
+      mEnvelopeAverager.process(summedSquaredInput, mAverageOfSquares);		// average of squares
       double sidechainRms = sqrt(mAverageOfSquares);	// sidechainRms (sort of ...), See NOTE 2
 
       SRCompressor::process(in1, in2, sidechainRms);	// rest of process
@@ -451,7 +455,7 @@ namespace SR {
       double squaredInput2 = extSC2 * extSC2;
       double summedSquaredInput = squaredInput1 + squaredInput2;			// power summing
       summedSquaredInput += DC_OFFSET;					// DC offset, to prevent denormal
-      mEnvelopeDetectorAverager.run(summedSquaredInput, mAverageOfSquares);		// average of squares
+      mEnvelopeAverager.process(summedSquaredInput, mAverageOfSquares);		// average of squares
       double sidechainRms = sqrt(mAverageOfSquares);	// sidechainRms (sort of ...), see NOTE 2
       SRCompressor::process(in1, in2, sidechainRms);	// rest of process
     }
@@ -464,7 +468,7 @@ namespace SR {
       double sidechainDb = SR::Utils::AmpToDB(sidechain);   // linear -> dB conversion
       double sampleOvershootDb = sidechainDb - mThreshDb;   // delta over threshold
       sampleOvershootDb += DC_OFFSET;                       // add DC offset to avoid denormal (why twice?); See NOTE 1
-      AttRelEnvelope::run(sampleOvershootDb, currentOvershootDb);	// run attack/release envelope
+      SRDynamicsDetector::process(sampleOvershootDb, currentOvershootDb);	// process attack/release envelope
       sampleOvershootDb = currentOvershootDb - DC_OFFSET;   // subtract DC offset to avoid denormal
 
       // Calculate gain reduction with knee
@@ -479,14 +483,17 @@ namespace SR {
       else
         grRaw = 0.;
 
-      // Gain reducion limiter
-      if (mMaxGr != 0.0) {
-        grlimit = grRaw / (mMaxGr * 0.5);
-        grlimitsqrt = std::pow(grlimit, 0.8);
+      //// Gain reducion limiter
+      //if (mMaxGr != 0.0) {
+      //  grlimit = grRaw / (mMaxGr * 0.5);
+      //  grlimitsqrt = std::pow(grlimit, 0.8);
 
-        grRaw = (1. - grlimitsqrt < 0.)
-          ? grRaw + ((1. - grlimitsqrt) * (grRaw - (mMaxGr * 0.5))) / grlimit
-          : grRaw;
+      //  grRaw = (1. - grlimitsqrt < 0.)
+      //    ? grRaw + ((1. - grlimitsqrt) * (grRaw - (mMaxGr * 0.5))) / grlimit
+      //    : grRaw;
+      //}
+      if (grRaw <= mMaxGr) {
+        grRaw = mMaxGr + 0.5 * mMaxGr / (grRaw - mMaxGr - 1.);
       }
 
       mGrDb = grRaw; // Store logarithmic gain reduction
@@ -565,11 +572,11 @@ namespace SR {
 
     protected:
       // class for faster attack/release
-      class FastEnvelope : public EnvelopeDetector
+      class FastEnvelope : public SRDynamicsEnvelope
       {
       public:
         FastEnvelope(double ms = 1.0, double sampleRate = 44100.0)
-          : EnvelopeDetector(ms, sampleRate)
+          : SRDynamicsEnvelope(ms, sampleRate)
         {}
         virtual ~FastEnvelope() {}
 
@@ -634,9 +641,9 @@ namespace SR {
       // See NOTE 5
             // attack/release
       if (mMaxPeak > currentOvershootLin)
-        mEnvelopeDetectorAttack.run(mMaxPeak, currentOvershootLin);		// run attack phase
+        mEnvelopeDetectorAttack.process(mMaxPeak, currentOvershootLin);		// process attack phase
       else
-        mEnvelopeDetectorRelease.run(mMaxPeak, currentOvershootLin);		// run release phase
+        mEnvelopeDetectorRelease.process(mMaxPeak, currentOvershootLin);		// process release phase
 
                                                                         // See NOTE 4
 
@@ -672,12 +679,12 @@ namespace SR {
     // GATE Class
     //-------------------------------------------------------------
     class SRGate
-      : public AttRelEnvelope
+      : public SRDynamicsDetector
       , public SRDynamicsBase
     {
     public:
       SRGate()
-        : AttRelEnvelope(1.0, 100.0)
+        : SRDynamicsDetector(1.0, 100.0)
         , SRDynamicsBase(0.0, 1.0)
       {
       }
@@ -699,7 +706,7 @@ namespace SR {
     {
     public:
       SRGateRMS()
-        : mEnvelopeDetectorAverager(5.0)
+        : mEnvelopeAverager(5.0)
       {
       }
       virtual ~SRGateRMS() {}
@@ -707,21 +714,21 @@ namespace SR {
       // sample rate
       virtual void setSampleRate(double sampleRate) {
         SRGate::SetSampleRate(sampleRate);
-        mEnvelopeDetectorAverager.setSampleRate(sampleRate);
+        mEnvelopeAverager.setSampleRate(sampleRate);
       }
 
       // RMS window
       virtual void setWindow(double ms) {
-        mEnvelopeDetectorAverager.setTc(ms);
+        mEnvelopeAverager.setTc(ms);
       }
-      virtual double getWindow(void) const { return mEnvelopeDetectorAverager.getTc(); }
+      virtual double getWindow(void) const { return mEnvelopeAverager.getTc(); }
 
       // runtime process
       void Process(double &in1, double &in2);	// gate runtime process
 
     private:
 
-      EnvelopeDetector mEnvelopeDetectorAverager;	// averager
+      SRDynamicsEnvelope mEnvelopeAverager;	// averager
 
     };
 
@@ -763,7 +770,7 @@ namespace SR {
 
       double summedSquaredInput = squaredInput1 + squaredInput2;			// power summing
       summedSquaredInput += DC_OFFSET;					// DC offset, to prevent denormal
-      mEnvelopeDetectorAverager.run(summedSquaredInput, mAverageOfSquares);		// average of squares
+      mEnvelopeAverager.process(summedSquaredInput, mAverageOfSquares);		// average of squares
       double sidechainRms = sqrt(mAverageOfSquares);	// sidechainRms (sort of ...), See NOTE 2
 
       SRGate::Process(in1, in2, sidechainRms);	// rest of process
@@ -781,7 +788,7 @@ namespace SR {
 
       // attack/release
       gateGainApply += DC_OFFSET;					// add DC offset to avoid denormal
-      AttRelEnvelope::run(gateGainApply, currentOvershootLin);	// run attack/release
+      SRDynamicsDetector::process(gateGainApply, currentOvershootLin);	// process attack/release
       gateGainApply = currentOvershootLin - DC_OFFSET;			// subtract DC offset, See NOTE 1
       in1 *= gateGainApply;	// apply gain reduction to input
       in2 *= gateGainApply;
@@ -793,15 +800,12 @@ namespace SR {
     // DEESSER Class
     //-------------------------------------------------------------
     class SRDeesser
-      : public AttRelEnvelope
+      : public SRDynamicsDetector
       , public SRDynamicsBase
     {
     public:
-      //-------------------------------------------------------------
-      // SRDeesser methods
-      //-------------------------------------------------------------
       SRDeesser()
-        : AttRelEnvelope(10.0, 100.0)
+        : SRDynamicsDetector(10.0, 100.0)
         , SRDynamicsBase(0.0, 1.0)
         , mFilterFreq(0.5)
         , mFilterQ(0.707)
@@ -816,9 +820,9 @@ namespace SR {
       virtual void SetDeesser(double threshDb, double ratio, double attackMs, double releaseMs, double normalizedFreq, double q, double kneeDb, double samplerate) {
         SRDynamicsBase::SetThresh(threshDb);
         SRDynamicsBase::SetRatio(ratio);
-        AttRelEnvelope::SetAttack(attackMs);
-        AttRelEnvelope::SetRelease(releaseMs);
-        AttRelEnvelope::SetSampleRate(samplerate);
+        SRDynamicsDetector::SetAttack(attackMs);
+        SRDynamicsDetector::SetRelease(releaseMs);
+        SRDynamicsDetector::SetSampleRate(samplerate);
         InitFilter(normalizedFreq, q);
         SetKnee(kneeDb);
       }
@@ -875,7 +879,7 @@ namespace SR {
       double sidechainDb = SR::Utils::AmpToDB(sidechain);	// convert linear -> dB
       double sampleOvershootDb = sidechainDb - mThreshDb;	// delta over threshold
       sampleOvershootDb += DC_OFFSET;					// add DC offset to avoid denormal, see NOTE 1
-      AttRelEnvelope::run(sampleOvershootDb, currentOvershootDb);	// run attack/release envelope
+      SRDynamicsDetector::process(sampleOvershootDb, currentOvershootDb);	// process attack/release envelope
       sampleOvershootDb = currentOvershootDb - DC_OFFSET; // subtract DC offset
       double grRaw;
 
