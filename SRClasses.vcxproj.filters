@@ -14,6 +14,9 @@
     <Filter Include="Utils">
       <UniqueIdentifier>{0d43aafb-c2f4-4385-9b98-357d00655108}</UniqueIdentifier>
     </Filter>
+    <Filter Include="AWClasses">
+      <UniqueIdentifier>{2f073938-9f56-4f8d-b6d9-42b8b60eb4ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils\SRHelpers.h">
@@ -40,6 +43,9 @@
     <ClInclude Include="SRConstants.h" />
     <ClInclude Include="graphics\SRControls.h">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="AWClasses\AWConsole6.h">
+      <Filter>AWClasses</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

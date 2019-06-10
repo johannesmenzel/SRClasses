@@ -133,6 +133,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AWClasses\AWConsole6.h" />
     <ClInclude Include="dsp\SRBuffer.h" />
     <ClInclude Include="dsp\SRDynamics.h" />
     <ClInclude Include="dsp\SRFilters.h" />
