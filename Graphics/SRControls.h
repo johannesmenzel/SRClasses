@@ -923,7 +923,7 @@ namespace SR {
 
       void OnResize() override {
         MakeRects();
-        mText.mSize = int(mRECT.W() * 0.25f);
+        mText.mSize = std::min(int(mRECT.W() * 0.25f), int(mRECT.H() / mNumLabels));
       };
 
       //  void OnMouseDblClick(float x, float y, const IMouseMod& mod) override;
