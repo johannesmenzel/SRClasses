@@ -134,39 +134,5 @@ enum EControlImages {
 
 // Plugin constants
 
-const struct {
-  const IColor colorPanelBG = IColor(255, 37, 53, 69);
-  const IColor colorPluginBG = IColor(255, 13, 18, 23);
-  const IColor colorKnobSslBlue = IColor(255, 62, 100, 121);
-  const IColor colorKnobSslRed = IColor(255, 131, 18, 18);
-  const IColor colorKnobSslGreen = IColor(255, 103, 141, 52);
-  const IColor colorKnobSslOrange = IColor(255, 234, 158, 19);
-  const IColor colorKnobSslYellow = IColor(255, 219, 181, 30);
-  const IColor colorKnobSslBlack = IColor(255, 23, 23, 23);
-  const IColor colorKnobSslWhite = IColor(255, 243, 243, 243);
-  const IColor colorDefaultText = COLOR_LIGHT_GRAY;
-  const IVColorSpec colorSpec = {
-    DEFAULT_BGCOLOR,            // Background (DEFAULT_BGCOLOR = COLOR_TRANSPARENT(0, 0, 0, 0))
-    DEFAULT_FGCOLOR,            // Foreground (DEFAULT_FGCOLOR = COLOR_MID_GRAY(255, 200, 200, 200))
-    IColor(255, 200, 200, 200), // Pressed    (DEFAULT_PRCOLOR = COLOR_LIGHT_GRAY(255, 240, 240, 240))
-    IColor(255, 70, 70, 70),    // Frame      (DEFAULT_FRCOLOR = COLOR_DARK_GRAY(255, 70, 70, 70))
-    IColor(30, 255, 255, 255),  // Higlight   (DEFAULT_HLCOLOR = COLOR_TRANSLUCENT(10, 0, 0, 0))
-    IColor(100, 0, 0, 0),       // Shadow     (DEFAULT_SHCOLOR = IColor(60, 0, 0, 0)
-    IColor(255, 249, 206, 34),  // Extra 1    (DEFAULT_X1COLOR = COLOR_RED(255, 255, 0, 0))
-    IColor(255, 48, 166, 186),  // Extra 2    (DEFAULT_X2COLOR = COLOR_GREEN(255, 0, 255, 0))
-    IColor(255, 249, 206, 34),  // Extra 3    (DEFAULT_X3COLOR = COLOR_BLUE(255, 0, 0, 255))
-  };
-  const int textSize = 14;
-  const IText textKnobLabel = IText(textSize, colorDefaultText, nullptr, IText::kAlignCenter, IText::kVAlignBottom);
-  const IText textKnobValue = IText(textSize, colorDefaultText, nullptr, IText::kAlignCenter, IText::kVAlignBottom);
-  const IText textVersionString = IText(20.f, colorDefaultText, nullptr,  IText::kAlignNear, IText::kVAlignMiddle);
-  const IText textPresetMenu = IText(30.f, colorDefaultText, nullptr, IText::kAlignCenter, IText::kVAlignMiddle);
-  // THESE ARE THE OLD ITEXT CONSTS
-  //const IText textKnobLabel = IText(textSize, colorDefaultText, nullptr, IText::kStyleBold, IText::kAlignCenter, IText::kVAlignBottom, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
-  //const IText textKnobValue = IText(textSize, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignBottom, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
-  //const IText textVersionString = IText(20, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignNear, IText::kVAlignMiddle, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
-  //const IText textPresetMenu = IText(30, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignMiddle, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
 
-
-} SRLayout;
 

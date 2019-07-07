@@ -13,11 +13,59 @@
 namespace SR {
   namespace Graphics {
 
+    const struct {
+      const IColor colorPanelBG = IColor(255, 37, 53, 69);
+      const IColor colorPluginBG = IColor(255, 13, 18, 23);
+      const IColor colorKnobSslBlue = IColor(255, 62, 100, 121);
+      const IColor colorKnobSslRed = IColor(255, 131, 18, 18);
+      const IColor colorKnobSslGreen = IColor(255, 103, 141, 52);
+      const IColor colorKnobSslOrange = IColor(255, 234, 158, 19);
+      const IColor colorKnobSslYellow = IColor(255, 219, 181, 30);
+      const IColor colorKnobSslBlack = IColor(255, 23, 23, 23);
+      const IColor colorKnobSslWhite = IColor(255, 243, 243, 243);
+      const IColor colorDefaultText = COLOR_LIGHT_GRAY;
+      const IVColorSpec colorSpec = {
+        DEFAULT_BGCOLOR,            // Background (DEFAULT_BGCOLOR = COLOR_TRANSPARENT(0, 0, 0, 0))
+        DEFAULT_FGCOLOR,            // Foreground (DEFAULT_FGCOLOR = COLOR_MID_GRAY(255, 200, 200, 200))
+        IColor(255, 200, 200, 200), // Pressed    (DEFAULT_PRCOLOR = COLOR_LIGHT_GRAY(255, 240, 240, 240))
+        IColor(255, 70, 70, 70),    // Frame      (DEFAULT_FRCOLOR = COLOR_DARK_GRAY(255, 70, 70, 70))
+        IColor(30, 255, 255, 255),  // Higlight   (DEFAULT_HLCOLOR = COLOR_TRANSLUCENT(10, 0, 0, 0))
+        IColor(100, 0, 0, 0),       // Shadow     (DEFAULT_SHCOLOR = IColor(60, 0, 0, 0)
+        IColor(255, 249, 206, 34),  // Extra 1    (DEFAULT_X1COLOR = COLOR_RED(255, 255, 0, 0))
+        IColor(255, 48, 166, 186),  // Extra 2    (DEFAULT_X2COLOR = COLOR_GREEN(255, 0, 255, 0))
+        IColor(255, 249, 206, 34),  // Extra 3    (DEFAULT_X3COLOR = COLOR_BLUE(255, 0, 0, 255))
+      };
+      const int textSize = 14;
+      const IText textKnobLabel = IText(textSize, colorDefaultText, nullptr, EAlign::Center, EVAlign::Bottom);
+      const IText textKnobValue = IText(textSize, colorDefaultText, nullptr, EAlign::Center, EVAlign::Bottom);
+      const IText textVersionString = IText(20.f, colorDefaultText, nullptr, EAlign::Near, EVAlign::Middle);
+      const IText textPresetMenu = IText(30.f, colorDefaultText, nullptr, EAlign::Center, EVAlign::Middle);
+      // THESE ARE THE OLD ITEXT CONSTS
+      //const IText textKnobLabel = IText(textSize, colorDefaultText, nullptr, IText::kStyleBold, IText::kAlignCenter, IText::kVAlignBottom, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
+      //const IText textKnobValue = IText(textSize, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignBottom, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
+      //const IText textVersionString = IText(20, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignNear, IText::kVAlignMiddle, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
+      //const IText textPresetMenu = IText(30, colorDefaultText, nullptr, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignMiddle, 0, IText::kQualityClearType, colorPanelBG, colorDefaultText);
+      const IVStyle style = IVStyle(
+        true,
+        true,
+        { DEFAULT_BGCOLOR, DEFAULT_FGCOLOR, IColor(255, 200, 200, 200),IColor(255, 70, 70, 70),IColor(30, 255, 255, 255),IColor(100, 0, 0, 0),IColor(255, 249, 206, 34),IColor(255, 48, 166, 186),IColor(255, 249, 206, 34) },
+        textKnobLabel,
+        textKnobValue,
+        true,
+        true,
+        true,
+        DEFAULT_ROUNDNESS,
+        DEFAULT_FRAME_THICKNESS,
+        DEFAULT_SHADOW_OFFSET,
+        DEFAULT_WIDGET_FRAC,
+        DEFAULT_WIDGET_ANGLE
+      );
 
+    } SRLayout;
 
-    struct LightInfo {
+    struct SRLightInfo {
     public:
-      LightInfo(float x, float y, float z)
+      SRLightInfo(float x, float y, float z)
         : mLightX(x)
         , mLightY(y)
         , mLightZ(z)
@@ -101,6 +149,194 @@ namespace SR {
     // KNOB
     // --------------------------------------------------------------------------------
 
+    /** A vector knob control drawn using graphics primitves */
+    class SRVectorKnob : public IKnobControlBase
+      , public IVectorBase
+    {
+    public:
+      SRVectorKnob(const IRECT& bounds, int paramIdx,
+        const char* label = "",
+        const IVStyle& style = DEFAULT_STYLE,
+        bool valueIsEditable = false, bool valueInWidget = false,
+        float aMin = -135.f, float aMax = 135.f, float aAnchor = -135.f,
+        EDirection direction = EDirection::Vertical, double gearing = DEFAULT_GEARING);
+
+      SRVectorKnob(const IRECT& bounds, IActionFunction actionFunction,
+        const char* label = "",
+        const IVStyle& style = DEFAULT_STYLE,
+        bool valueIsEditable = false, bool valueInWidget = false,
+        float aMin = -135.f, float aMax = 135.f, float aAnchor = -135.f,
+        EDirection direction = EDirection::Vertical, double gearing = DEFAULT_GEARING);
+
+      virtual ~SRVectorKnob() {}
+
+      void Draw(IGraphics& g) override;
+      virtual void DrawWidget(IGraphics& g) override;
+
+      void OnMouseDown(float x, float y, const IMouseMod& mod) override;
+      void OnMouseUp(float x, float y, const IMouseMod& mod) override;
+      void OnMouseOver(float x, float y, const IMouseMod& mod) override;
+      void OnMouseOut() override { mValueMouseOver = false; IKnobControlBase::OnMouseOut(); }
+
+      //  void OnMouseDblClick(float x, float y, const IMouseMod& mod) override {  OnMouseDown(x, y, mod); }
+      void OnResize() override;
+      bool IsHit(float x, float y) const override;
+      void SetDirty(bool push, int valIdx = kNoValIdx) override;
+      void OnInit() override;
+
+    protected:
+      float mAngleMin, mAngleMax;
+      float mAnchorAngle; // for bipolar arc
+      bool mValueMouseOver = false;
+    };
+
+
+    SRVectorKnob::SRVectorKnob(const IRECT& bounds, int paramIdx, const char* label, const IVStyle& style, bool valueIsEditable, bool valueInWidget, float aMin, float aMax, float aAnchor, EDirection direction, double gearing)
+      : IKnobControlBase(bounds, paramIdx, direction, gearing)
+      , IVectorBase(style, false, valueInWidget)
+      , mAngleMin(aMin)
+      , mAngleMax(aMax)
+      , mAnchorAngle(aAnchor)
+    {
+      DisablePrompt(!valueIsEditable);
+      mText = style.valueText;
+      AttachIControl(this, label);
+    }
+
+    SRVectorKnob::SRVectorKnob(const IRECT& bounds, IActionFunction actionFunc, const char* label, const IVStyle& style, bool valueIsEditable, bool valueInWidget, float aMin, float aMax, float aAnchor, EDirection direction, double gearing)
+      : IKnobControlBase(bounds, kNoParameter, direction, gearing)
+      , IVectorBase(style, false, valueInWidget)
+      , mAngleMin(aMin)
+      , mAngleMax(aMax)
+      , mAnchorAngle(aAnchor)
+    {
+      DisablePrompt(!valueIsEditable);
+      mText = style.valueText;
+      SetActionFunction(actionFunc);
+      AttachIControl(this, label);
+    }
+
+    void SRVectorKnob::Draw(IGraphics& g)
+    {
+      DrawBackGround(g, mRECT);
+      DrawWidget(g);
+      DrawLabel(g);
+      DrawValue(g, mValueMouseOver);
+    }
+
+    void SRVectorKnob::DrawWidget(IGraphics& g)
+    {
+      float radius;
+
+      if (mWidgetBounds.W() > mWidgetBounds.H())
+        radius = (mWidgetBounds.H() / 2.f /*TODO: fix bodge*/);
+      else
+        radius = (mWidgetBounds.W() / 2.f /*TODO: fix bodge*/);
+
+      const float cx = mWidgetBounds.MW(), cy = mWidgetBounds.MH();
+
+      if (!IsGrayed())
+      {
+        /*TODO: constants! */
+        const float v = mAngleMin + ((float)GetValue() * (mAngleMax - mAngleMin));
+
+        g.DrawArc(GetColor(kX1), cx, cy, (radius * 0.8f) + 3.f, v >= mAnchorAngle ? mAnchorAngle : mAnchorAngle - (mAnchorAngle - v), v >= mAnchorAngle ? v : mAnchorAngle, 0, 2.f);
+
+        DrawPressableCircle(g, mWidgetBounds, radius * 0.8f, false/*mMouseDown*/, mMouseIsOver & !mValueMouseOver);
+
+        g.DrawCircle(GetColor(kHL), cx, cy, radius * 0.7f);
+
+        if (mMouseDown)
+          g.FillCircle(GetColor(kON), cx, cy, radius * 0.7f);
+
+        g.DrawRadialLine(GetColor(kFR), cx, cy, v, 0.6f * radius, 0.8f * radius, 0, mStyle.frameThickness >= 1.f ? mStyle.frameThickness : 1.f);
+      }
+      else
+      {
+        g.FillCircle(GetColor(kOFF), cx, cy, radius);
+      }
+    }
+
+    void SRVectorKnob::OnMouseDown(float x, float y, const IMouseMod& mod)
+    {
+      if (mStyle.showValue && mValueBounds.Contains(x, y))
+      {
+        PromptUserInput(mValueBounds);
+      }
+      else
+      {
+        if (mStyle.hideCursor)
+          GetUI()->HideMouseCursor(true, true);
+
+        IKnobControlBase::OnMouseDown(x, y, mod);
+      }
+    }
+
+    void SRVectorKnob::OnMouseUp(float x, float y, const IMouseMod& mod)
+    {
+      if (mStyle.hideCursor)
+        GetUI()->HideMouseCursor(false);
+
+      IKnobControlBase::OnMouseUp(x, y, mod);
+
+      SetDirty(true);
+    }
+
+    void SRVectorKnob::OnMouseOver(float x, float y, const IMouseMod& mod)
+    {
+      if (mStyle.showValue && !mDisablePrompt)
+        mValueMouseOver = mValueBounds.Contains(x, y);
+
+      IKnobControlBase::OnMouseOver(x, y, mod);
+    }
+
+    void SRVectorKnob::OnResize()
+    {
+      SetTargetRECT(MakeRects(mRECT));
+      SetDirty(false);
+    }
+
+    bool SRVectorKnob::IsHit(float x, float y) const
+    {
+      if (!mDisablePrompt)
+      {
+        if (mValueBounds.Contains(x, y))
+          return true;
+      }
+
+      return mWidgetBounds.Contains(x, y);
+    }
+
+    void SRVectorKnob::SetDirty(bool push, int valIdx)
+    {
+      IKnobControlBase::SetDirty(push);
+
+      const IParam* pParam = GetParam();
+
+      if (pParam)
+        pParam->GetDisplayForHostWithLabel(mValueStr);
+    }
+
+    void SRVectorKnob::OnInit()
+    {
+      const IParam* pParam = GetParam();
+
+      if (pParam)
+      {
+        pParam->GetDisplayForHostWithLabel(mValueStr);
+
+        if (!mLabelStr.GetLength())
+          mLabelStr.Set(pParam->GetNameForHost());
+      }
+    }
+
+
+
+
+
+
+/*
+
     class SRVectorKnobText
       : public IKnobControlBase
       , public IVectorBase
@@ -108,12 +344,12 @@ namespace SR {
     public:
       SRVectorKnobText(IRECT bounds, int paramIdx,
         const char* label = "", const char* minLabel = "", const char* maxLabel = "", const char* ctrLabel = "", bool drawCircleLabels = false, bool displayParamValue = false,
-        const IVColorSpec& colorSpec = DEFAULT_SPEC, const IColor& color = DEFAULT_FGCOLOR,
-        const IText& labelText = IText(DEFAULT_TEXT_SIZE + 5, IText::kVAlignTop), const IText& valueText = IText(DEFAULT_TEXT_SIZE, IText::kVAlignBottom),
+        const IVStyle& style = DEFAULT_STYLE, const IColor& color = DEFAULT_FGCOLOR,
+        const IText& labelText = IText(DEFAULT_TEXT_SIZE + 5, EVAlign::Top), const IText& valueText = IText(DEFAULT_TEXT_SIZE, EVAlign::Bottom),
         float aMin = -135.f, float aMax = 135.f, float knobFrac = 0.50f,
-        EDirection direction = kVertical, double gearing = DEFAULT_GEARING)
+        EDirection direction = EDirection::Vertical, double gearing = DEFAULT_GEARING)
         : IKnobControlBase(bounds, paramIdx, direction, gearing)
-        , IVectorBase(colorSpec)
+        , IVectorBase(style, true, displayParamValue)
         , mAngleMin(aMin)
         , mAngleMax(aMax)
         , mAngleDefault(aMin + 0.5f * (aMax - aMin))
@@ -126,17 +362,17 @@ namespace SR {
         , mLabelText(labelText)
         , mKnobFrac(knobFrac)
         , mColor(color)
-        , mTextCircleLabelMin(10.f, COLOR_LIGHT_GRAY, nullptr, IText::EAlign::kAlignFar)
-        , mTextCircleLabelMax(10.f, COLOR_LIGHT_GRAY, nullptr, IText::EAlign::kAlignNear)
-        , mTextCircleLabelCtr(10.f, COLOR_LIGHT_GRAY, nullptr, IText::EAlign::kAlignCenter)
-        , mPatternShadow(IPattern(EPatternType::kSolidPattern))
-        , mPatternHead(IPattern(EPatternType::kRadialPattern))
-        , mPatternHeadLights(IPattern(EPatternType::kRadialPattern))
-        , mPatternRim(IPattern(EPatternType::kLinearPattern))
-        , mPatternEdge(IPattern(EPatternType::kLinearPattern))
-        , mShadowFrame(IShadow(mPatternShadow, 1.f, mShadowOffset, mShadowOffset, 0.5f, true))
-        , mShadowHead(IShadow(mPatternShadow, 1.f, mShadowOffset, mShadowOffset, 0.5f, true))
-        , mShadowArrow(IShadow(mPatternShadow, 1.f, mShadowOffset, mShadowOffset, 0.5f, true))
+        , mTextCircleLabelMin(10.f, COLOR_LIGHT_GRAY, nullptr, EAlign::Far)
+        , mTextCircleLabelMax(10.f, COLOR_LIGHT_GRAY, nullptr, EAlign::Near)
+        , mTextCircleLabelCtr(10.f, COLOR_LIGHT_GRAY, nullptr, EAlign::Center)
+        , mPatternShadow(IPattern(EPatternType::Solid))
+        , mPatternHead(IPattern(EPatternType::Radial))
+        , mPatternHeadLights(IPattern(EPatternType::Radial))
+        , mPatternRim(IPattern(EPatternType::Linear))
+        , mPatternEdge(IPattern(EPatternType::Linear))
+        , mShadowFrame(mPatternShadow, 1.f, style.shadowOffset, style.shadowOffset, 0.5f, true)
+        , mShadowHead(mPatternShadow, 1.f, style.shadowOffset, style.shadowOffset, 0.5f, true)
+        , mShadowArrow(mPatternShadow, 1.f, style.shadowOffset, style.shadowOffset, 0.5f, true)
 
       {
         if (mDisplayParamValue)
@@ -144,7 +380,7 @@ namespace SR {
         mValueText = valueText;
         mStrokeOptions.mPreserve = true;
         mFillOptions.mPreserve = true;
-        AttachIControl(this);
+        AttachIControl(this, label);
       }
 
       virtual ~SRVectorKnobText() {}
@@ -228,7 +464,7 @@ namespace SR {
         //g.PathStroke(mPatternEdge, knobScales.outerRim.relThickness * mRadius, strokeOptions);
         g.PathFill(mPatternRim);
         mLayer = g.EndLayer();
-        if (!mEmboss && !mGrayed) g.ApplyLayerDropShadow(mLayer, mShadowFrame);
+        if (!Getstyle && !mGrayed) g.ApplyLayerDropShadow(mLayer, mShadowFrame);
         g.DrawLayer(mLayer);
 
         // Draw Head
@@ -305,14 +541,14 @@ namespace SR {
           const float labelDisplayWidth = mTargetRECT.W() * mKnobFrac * 0.5f;
           switch (mLabelText.mVAlign)
           {
-          case IText::kVAlignTop:
+          case EVAlign::Top:
             mLabelBounds = mTargetRECT.GetFromTop(textRect.H()).GetMidHPadded(labelDisplayWidth);
             mHandleBounds = mHandleBounds.GetReducedFromTop(textRect.H());
             break;
-          case IText::kVAlignMiddle:
+          case EVAlign::Middle:
             mLabelBounds = mTargetRECT.GetMidVPadded(textRect.H() / 2.f).GetMidHPadded(labelDisplayWidth);
             break;
-          case IText::kVAlignBottom:
+          case EVAlign::Bottom:
             mLabelBounds = mTargetRECT.GetFromBottom(textRect.H()).GetMidHPadded(labelDisplayWidth);
             mHandleBounds = mHandleBounds.GetReducedFromBottom(textRect.H());
             break;
@@ -337,17 +573,17 @@ namespace SR {
           const float valueDisplayWidth = mTargetRECT.W() * mKnobFrac * 0.5f;
 
           switch (mValueText.mVAlign) {
-          case IText::kVAlignTop:
+          case EVAlign::Top:
             mValueBounds = mTargetRECT.GetFromTop(textRect.H()).GetMidHPadded(valueDisplayWidth);
-            if (mLabelText.mVAlign != IText::kVAlignTop)
+            if (mLabelText.mVAlign != EVAlign::Top)
               mHandleBounds = mHandleBounds.GetReducedFromTop(textRect.H());
             break;
-          case IText::kVAlignMiddle:
+          case EVAlign::Middle:
             mValueBounds = mTargetRECT.GetMidVPadded(textRect.H() / 2.f).GetMidHPadded(valueDisplayWidth);
             break;
-          case IText::kVAlignBottom:
+          case EVAlign::Bottom:
             mValueBounds = mTargetRECT.GetFromBottom(textRect.H()).GetMidHPadded(valueDisplayWidth);
-            if (mLabelText.mVAlign != IText::kVAlignBottom)
+            if (mLabelText.mVAlign != EVAlign::Bottom)
               mHandleBounds = mHandleBounds.GetReducedFromBottom(textRect.H());
             break;
           default:
@@ -546,18 +782,168 @@ namespace SR {
       } knobScales;
     };
 
+*/
+
+
+
+
+
+class SRVectorSwitch : public ISwitchControlBase
+  , public IVectorBase
+{
+public:
+  SRVectorSwitch(const IRECT& bounds, int paramIdx = kNoParameter, const char* label = "", const IVStyle& style = DEFAULT_STYLE, bool valueInButton = true);
+
+  SRVectorSwitch(const IRECT& bounds, IActionFunction actionFunc = SplashClickActionFunc, const char* label = "", const IVStyle& style = DEFAULT_STYLE, int numStates = 2, bool valueInButton = true);
+
+  void Draw(IGraphics& g) override;
+  virtual void DrawWidget(IGraphics& g) override;
+  bool IsHit(float x, float y) const override;
+  void SetDirty(bool push, int valIdx = kNoValIdx) override;
+  void OnResize() override;
+  void OnInit() override;
+};
+
+
+SRVectorSwitch::SRVectorSwitch(const IRECT& bounds, int paramIdx, const char* label, const IVStyle& style, bool valueInButton)
+  : ISwitchControlBase(bounds, paramIdx, SplashClickActionFunc)
+  , IVectorBase(style, false, valueInButton)
+{
+  AttachIControl(this, label);
+  mText = style.valueText;
+
+  if (valueInButton)
+    mText.mVAlign = mStyle.valueText.mVAlign = EVAlign::Middle;
+
+  mDblAsSingleClick = true;
+}
+
+SRVectorSwitch::SRVectorSwitch(const IRECT& bounds, IActionFunction actionFunc, const char* label, const IVStyle& style, int numStates, bool valueInButton)
+  : ISwitchControlBase(bounds, kNoParameter, actionFunc, numStates)
+  , IVectorBase(style, false, valueInButton)
+{
+  AttachIControl(this, label);
+  mText = style.valueText;
+
+  if (valueInButton)
+    mText.mVAlign = mStyle.valueText.mVAlign = EVAlign::Middle;
+
+  mDblAsSingleClick = true;
+}
+
+void SRVectorSwitch::Draw(IGraphics& g)
+{
+  DrawBackGround(g, mRECT);
+  DrawWidget(g);
+  DrawLabel(g);
+  DrawValue(g, false);
+}
+
+void SRVectorSwitch::DrawWidget(IGraphics& g)
+{
+  DrawPressableRectangle(g, mWidgetBounds, mMouseDown, mMouseIsOver);
+}
+
+void SRVectorSwitch::SetDirty(bool push, int valIdx)
+{
+  IControl::SetDirty(push);
+
+  const IParam* pParam = GetParam();
+
+  if (pParam)
+    pParam->GetDisplayForHost(mValueStr);
+}
+
+void SRVectorSwitch::OnResize()
+{
+  SetTargetRECT(MakeRects(mRECT, true));
+  SetDirty(false);
+}
+
+bool SRVectorSwitch::IsHit(float x, float y) const
+{
+  return mWidgetBounds.Contains(x, y);
+}
+
+void SRVectorSwitch::OnInit()
+{
+  ISwitchControlBase::OnInit();
+
+  const IParam* pParam = GetParam();
+
+  if (pParam)
+  {
+    pParam->GetDisplayForHostWithLabel(mValueStr);
+
+    if (!mLabelStr.GetLength())
+      mLabelStr.Set(pParam->GetNameForHost());
+  }
+}
+
+/** A vector toggle control. Click to cycle through two states. */
+class SRVectorToggle : public SRVectorSwitch
+{
+public:
+  SRVectorToggle(const IRECT& bounds, int paramIdx = kNoParameter, const char* label = "", const IVStyle& style = DEFAULT_STYLE, const char* offText = "OFF", const char* onText = "ON");
+
+  SRVectorToggle(const IRECT& bounds, IActionFunction actionFunc = SplashClickActionFunc, const char* label = "", const IVStyle& style = DEFAULT_STYLE, const char* offText = "OFF", const char* onText = "ON", bool initialState = false);
+
+  void DrawValue(IGraphics& g, bool mouseOver) override;
+  void DrawWidget(IGraphics& g) override;
+protected:
+  WDL_String mOffText;
+  WDL_String mOnText;
+};
+
+SRVectorToggle::SRVectorToggle(const IRECT& bounds, int paramIdx, const char* label, const IVStyle& style, const char* offText, const char* onText)
+  : SRVectorSwitch(bounds, paramIdx, label, style, true)
+  , mOnText(onText)
+  , mOffText(offText)
+{
+  //TODO: assert boolean?
+}
+
+SRVectorToggle::SRVectorToggle(const IRECT& bounds, IActionFunction actionFunc, const char* label, const IVStyle& style, const char* offText, const char* onText, bool initialState)
+  : SRVectorSwitch(bounds, actionFunc, label, style, 2, true)
+  , mOnText(onText)
+  , mOffText(offText)
+{
+  SetValue((double)initialState);
+}
+
+void SRVectorToggle::DrawWidget(IGraphics& g)
+{
+  DrawPressableRectangle(g, mWidgetBounds, GetValue() > 0.5, mMouseIsOver);
+}
+
+void SRVectorToggle::DrawValue(IGraphics& g, bool mouseOver)
+{
+  if (mouseOver)
+    g.FillRect(COLOR_TRANSLUCENT, mValueBounds);
+
+  if (GetValue() > 0.5)
+    g.DrawText(mStyle.valueText, mOnText.Get(), mValueBounds);
+  else
+    g.DrawText(mStyle.valueText, mOffText.Get(), mValueBounds);
+}
+
+// Todo: Commented until reimplementation
+
 
     /** A vector switch control. Click to cycle through states. */
+
+/*
+
     class SRVectorSwitch : public ISwitchControlBase
       , public IVectorBase
     {
     public:
       SRVectorSwitch(IRECT bounds, int paramIdx = kNoParameter, IActionFunction actionFunc = SplashClickActionFunc,
-        const char* label = "", const IVColorSpec& colorSpec = DEFAULT_SPEC, int numStates = 2)
+        const char* label = "", const IVStyle& style = DEFAULT_STYLE, int numStates = 2)
         : ISwitchControlBase(bounds, paramIdx, actionFunc, numStates)
-        , IVectorBase(colorSpec)
+        , IVectorBase(style)
       {
-        AttachIControl(this);
+        AttachIControl(this, ""); // TODO: Should hand label, but may be solved through adding IVSwitch
         mDblAsSingleClick = true;
         mStr.Set(label);
       }
@@ -586,46 +972,46 @@ namespace SR {
         g.FillRect(GetColor(kBG), bounds);
 
         IRECT handleBounds = GetAdjustedHandleBounds(bounds);
-        const float cornerRadius = mRoundness * (handleBounds.W() / 2.f);
+        const float cornerRadius = IVectorBase::mStyle.roundness * (handleBounds.W() / 2.f);
 
         // Pressed
         if (pressed) {
           g.FillRoundRect(GetColor(kPR), handleBounds, cornerRadius);
 
           //inner shadow
-          if (mDrawShadows && mEmboss) {
-            g.PathRect(handleBounds.GetHSliced(mShadowOffset));
-            g.PathRect(handleBounds.GetVSliced(mShadowOffset));
+          if (mStyle.drawShadows) {
+            g.PathRect(handleBounds.GetHSliced(mStyle.shadowOffset));
+            g.PathRect(handleBounds.GetVSliced(mStyle.shadowOffset));
             g.PathFill(GetColor(kSH));
           }
 
           if (mouseOver) g.FillRoundRect(GetColor(kHL), handleBounds, cornerRadius);
           if (mControl->GetAnimationFunction()) DrawSplash(g);
-          if (mDrawFrame) g.DrawRoundRect(GetColor(kFR), handleBounds, cornerRadius, 0, mFrameThickness);
+          if (mStyle.drawFrame) g.DrawRoundRect(GetColor(kFR), handleBounds, cornerRadius, 0, mStyle.frameThickness);
         }
         else {
           // Normal button state
           if (mNumStates > 2 || GetValue() == 0) {
             //outer shadow
-            if (mDrawShadows && !mEmboss) g.FillRoundRect(GetColor(kSH), handleBounds, cornerRadius);
+            if (mStyle.drawShadows) g.FillRoundRect(GetColor(kSH), handleBounds, cornerRadius);
             g.FillRoundRect(GetColor(kFG), handleBounds, cornerRadius);
             if (mouseOver) g.FillRoundRect(GetColor(kHL), handleBounds, cornerRadius);
             if (mControl->GetAnimationFunction()) DrawSplash(g);
-            if (mDrawFrame) g.DrawRoundRect(GetColor(kFR), handleBounds, cornerRadius, 0, mFrameThickness);
+            if (mStyle.drawFrame) g.DrawRoundRect(GetColor(kFR), handleBounds, cornerRadius, 0, mStyle.frameThickness);
           }
 
           // If button should be "inside"
           else {
-            g.FillRoundRect(GetColor(kPR), handleBounds.GetTranslated(mShadowOffset, mShadowOffset), cornerRadius);
+            g.FillRoundRect(GetColor(kPR), handleBounds.GetTranslated(mStyle.shadowOffset, mStyle.shadowOffset), cornerRadius);
             //inner shadow
-            if (mDrawShadows && mEmboss) {
-              g.PathRect(handleBounds.GetHSliced(mShadowOffset));
-              g.PathRect(handleBounds.GetVSliced(mShadowOffset));
+            if (mStyle.drawShadows) {
+              g.PathRect(handleBounds.GetHSliced(mStyle.shadowOffset));
+              g.PathRect(handleBounds.GetVSliced(mStyle.shadowOffset));
               g.PathFill(GetColor(kSH));
             }
-            if (mouseOver) g.FillRoundRect(GetColor(kHL), handleBounds.GetTranslated(mShadowOffset, mShadowOffset), cornerRadius);
+            if (mouseOver) g.FillRoundRect(GetColor(kHL), handleBounds.GetTranslated(mStyle.shadowOffset, mStyle.shadowOffset), cornerRadius);
             if (mControl->GetAnimationFunction()) DrawSplash(g);
-            if (mDrawFrame) g.DrawRoundRect(GetColor(kFR), handleBounds.GetTranslated(mShadowOffset, mShadowOffset), cornerRadius, 0, mFrameThickness);
+            if (mStyle.drawShadows) g.DrawRoundRect(GetColor(kFR), handleBounds.GetTranslated(mStyle.shadowOffset, mStyle.shadowOffset), cornerRadius, 0, mStyle.frameThickness);
           }
         }
 
@@ -636,6 +1022,8 @@ namespace SR {
     protected:
       WDL_String mStr;
     };
+    */
+
 
 
     /** A basic control to display some text */
@@ -703,7 +1091,7 @@ namespace SR {
           mTrackBounds.Add(IRECT());
         }
 
-        AttachIControl(this);
+        AttachIControl(this, ""); // TODO: Should hand label
       }
 
       void MakeRects()
@@ -711,8 +1099,8 @@ namespace SR {
         for (int ch = 0; ch < MaxNTracks(); ch++)
         {
           mTrackBounds.Get()[ch] = mRECT.GetPadded(-mOuterPadding).
-            SubRect(EDirection(!mDirection), MaxNTracks(), ch).
-            GetPadded(0, -mTrackPadding * (float)mDirection, -mTrackPadding * (float)!mDirection, -mTrackPadding);
+            SubRect(EDirection(!(bool)mDirection), MaxNTracks(), ch).
+            GetPadded(0, -mTrackPadding * (float)mDirection, -mTrackPadding * (float)!(bool)mDirection, -mTrackPadding);
         }
       }
 
@@ -725,7 +1113,7 @@ namespace SR {
           DrawTrack(g, mTrackBounds.Get()[ch], ch);
         }
 
-        if (mDrawFrame)
+        if (mStyle.drawFrame)
           DrawFrame(g);
       }
 
@@ -737,7 +1125,7 @@ namespace SR {
     private:
       virtual void DrawFrame(IGraphics& g)
       {
-        g.DrawRect(GetColor(kFR), mRECT, nullptr, mFrameThickness);
+        g.DrawRect(GetColor(kFR), mRECT, nullptr, mStyle.frameThickness);
       }
 
       virtual void DrawTrack(IGraphics& g, IRECT& r, int chIdx)
@@ -746,7 +1134,7 @@ namespace SR {
         DrawTrackHandle(g, r, chIdx);
 
         if (mDrawTrackFrame)
-          g.DrawRect(GetColor(kFR), r, nullptr, mFrameThickness);
+          g.DrawRect(GetColor(kFR), r, nullptr, mStyle.frameThickness);
       }
 
       virtual void DrawTrackBG(IGraphics& g, IRECT& r, int chIdx)
@@ -762,7 +1150,7 @@ namespace SR {
 
         IRECT peakRect;
 
-        if (mDirection == kVertical)
+        if (mDirection == EDirection::Vertical)
           peakRect = IRECT(fillRect.L, fillRect.T, fillRect.R, fillRect.T + mPeakSize);
         else
           peakRect = IRECT(fillRect.R - mPeakSize, fillRect.T, fillRect.R, fillRect.B);
@@ -782,7 +1170,7 @@ namespace SR {
 
     protected:
 
-      EDirection mDirection = EDirection::kVertical;
+      EDirection mDirection = EDirection::Vertical;
       int mMaxNTracks;
       WDL_TypedBuf<float> mTrackData; // real values of sliders/meters
       WDL_TypedBuf<IRECT> mTrackBounds;
@@ -899,8 +1287,8 @@ namespace SR {
         , mMaxTrackValue(4.f)
         , mMarkStep(markStep)
         , mLabelStep(labelStep)
-        , mText(IText(14, COLOR_LIGHT_GRAY, DEFAULT_FONT, IText::kAlignCenter, IText::kVAlignMiddle))
-        , mNumLines(int(maxDb - minDb))
+        , mText(14.f, COLOR_LIGHT_GRAY, DEFAULT_FONT, EAlign::Center, EVAlign::Middle, 0.f)
+      , mNumLines(int(maxDb - minDb))
         , mNumLabels(int((maxDb - minDb) / labelStep))
         , rectLabelFrame(IRECT())
         //, mPattern(kLinearPattern)
@@ -915,7 +1303,7 @@ namespace SR {
         : IVTrackControlBase(bounds, MAXNC, 0, 1., trackNames)
         , mDrawFromTop(drawFromTop)
         , mDrawInverted(drawInverted)
-        , mText(IText(14, COLOR_LIGHT_GRAY, DEFAULT_FONT, IText::kStyleNormal, IText::kAlignCenter, IText::kVAlignMiddle, 0, IText::kQualityClearType))
+        , mText(14.f, COLOR_LIGHT_GRAY, DEFAULT_FONT, EAlign::Center, EVAlign::Middle, 0.f)
         //, mPattern(kLinearPattern)
         , mDrawDb(false)
       {
@@ -932,8 +1320,8 @@ namespace SR {
       void MakeRects() {
         for (int ch = 0; ch < MaxNTracks(); ch++) {
           mTrackBounds.Get()[ch] = mRECT.GetPadded(-mOuterPadding).
-            SubRect(EDirection(!mDirection), MaxNTracks(), ch).
-            GetPadded(0, -mTrackPadding, -mTrackPadding * (float)!mDirection, -mTrackPadding * (float)mDirection);
+            SubRect(EDirection::Horizontal, MaxNTracks(), ch).
+            GetPadded(0, -mTrackPadding, -mTrackPadding * (float)EDirection::Horizontal, -mTrackPadding * (float)EDirection::Vertical);
         }
 
         if (mDrawDb) {
@@ -945,7 +1333,7 @@ namespace SR {
             const float vPosition = std::pow<float>((val - mMinDb) / (mMaxDb - mMinDb), 1.0f / mShape);
             mLineCoord[i].SetLine(rectLabelFrame.B - rectLabelFrame.H() * vPosition, 1.f);
             if (i % mLabelStep == 0) {
-              mLineCoord[i].thickness = mFrameThickness;
+              mLineCoord[i].thickness = mStyle.frameThickness;
               mLabelFrames[j].SetLabelFrame(
                 IRECT(rectLabelFrame.L, -mText.mSize + rectLabelFrame.B - vPosition * rectLabelFrame.H(), rectLabelFrame.R, mText.mSize + rectLabelFrame.B - vPosition * rectLabelFrame.H()),
                 val
@@ -1004,7 +1392,7 @@ namespace SR {
         g.FillRect(GetColor(kFG), fillRect); // TODO: shadows!
 
         IRECT peakRect;
-        if (mDirection == kVertical)
+        if (mDirection == EDirection::Vertical)
           peakRect = (!mDrawFromTop) ? fillRect.GetFromTop(mPeakSize) : fillRect.GetFromBottom(mPeakSize);
         else
           peakRect = (!mDrawFromTop) ? fillRect.GetFromRight(mPeakSize) : fillRect.GetFromLeft(mPeakSize);
@@ -1099,15 +1487,15 @@ namespace SR {
       bool mDrawFrame;
     };
 
-
-
+    // TODO: THIS IS COMMENTED UNTIL CONFLICT WITH STEINBERG::IPLUGINBASE IS SOLVED
+    /*
     // Preset Menu
 // -----------------------------------
 
     class SRPresetMenu
       : public IControl {
     public:
-      SRPresetMenu(IPlugAPIBase *pPlug, IRECT bounds, IText pText, const char** pNamedParams)
+      SRPresetMenu(IPluginBase *pPlug, IRECT bounds, IText pText, const char** pNamedParams)
         : IControl(bounds, -1) {
         mTextEntryLength = MAX_PRESET_NAME_LEN - 3;
         mText = pText;
@@ -1171,7 +1559,7 @@ namespace SR {
           //  enumNames[i] = mPlug->GetParamGroupName(i);
           //}
           WDL_String filename, path;
-          GetUI()->PromptForFile(filename, path, EFileAction::kFileSave, "txt");
+          GetUI()->PromptForFile(filename, path, EFileAction::Save, "txt");
           mPlug->DumpPresetSrcCode(filename.Get(), mNamedParams);
         }
       }
@@ -1186,10 +1574,10 @@ namespace SR {
       }
     private:
       WDL_String mDisp;
-      IPlugAPIBase *mPlug;
+      IPluginBase *mPlug;
       const char** mNamedParams;
     };
-
+    */
 
     // TODO: Draw with PathConvexShape from ptr to member array updated from Updatefunction
     class SRGraphBase
@@ -1197,15 +1585,15 @@ namespace SR {
       , public IVectorBase
     {
     public:
-      SRGraphBase(IRECT bounds, int numValues, double* values, const IVColorSpec& colorSpec = DEFAULT_SPEC)
+      SRGraphBase(IRECT bounds, int numValues, double* values, const IVStyle& style = DEFAULT_STYLE)
         : IControl(bounds, -1)
-        , IVectorBase(colorSpec)
+        , IVectorBase(style)
         , mValues(values)
         , mNumValues(numValues)
         , mX(new float[numValues])
         , mY(new float[numValues])
       {
-        AttachIControl(this);
+        AttachIControl(this, ""); // TODO: Should hand label
       }
 
       ~SRGraphBase() {
@@ -1235,7 +1623,7 @@ namespace SR {
           g.PathLineTo(mX[i], mY[i]);
         }
         g.PathLineTo(mRECT.R, mRECT.MH());
-        g.PathStroke(GetColor(kFG), mFrameThickness);
+        g.PathStroke(GetColor(kFG), mStyle.frameThickness);
       };
 
       void OnResize() override {
@@ -1269,20 +1657,20 @@ namespace SR {
       , public IVectorBase
     {
     public:
-      SRFrequencyResponseMeter(IRECT bounds, int numValues, double* values, double shape = 1.0, const IVColorSpec& colorSpec = DEFAULT_SPEC)
+      SRFrequencyResponseMeter(IRECT bounds, int numValues, double* values, double shape = 1.0, const IVStyle& style = DEFAULT_STYLE)
         : IControl(bounds, -1)
-        , IVectorBase(colorSpec)
+        , IVectorBase(style)
         , mValues(values)
         , mNumValues(numValues)
         , mShape(shape)
-        , mPatternFill(IPattern(EPatternType::kSolidPattern))
-        , mPatternStroke(IPattern(EPatternType::kSolidPattern))
+        , mPatternFill(IPattern(EPatternType::Solid))
+        , mPatternStroke(IPattern(EPatternType::Solid))
       {
         mStrokeOptions.mPreserve = true;
         mFillOptions.mPreserve = true;
         mPatternStroke = IPattern(GetColor(kFG));
         mPatternFill = IPattern(GetColor(kHL));
-        AttachIControl(this);
+        AttachIControl(this, ""); // TODO: shoud hand label
       }
 
       ~SRFrequencyResponseMeter() {}
