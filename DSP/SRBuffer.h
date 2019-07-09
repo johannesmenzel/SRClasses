@@ -23,7 +23,8 @@ namespace SR {
   namespace DSP {
 
     // Buffer in progress with PtrList of WDL_Typedbuf, vectors or simple T**
-    template<typename T = double, int MAXNUMCHANNELS = 1, int MAXNUMFRAMES = DEFAULT_BLOCK_SIZE> class SRBuffer {
+    template<typename T = double, int MAXNUMCHANNELS = 1, int MAXNUMFRAMES = DEFAULT_BLOCK_SIZE>
+    class SRBuffer {
     public:
 
       // Construct class
@@ -78,7 +79,8 @@ namespace SR {
 #elif BUFFERIMPL == 2 // ptr
           mBuffer.Get(c)->Resize(mNumFrames, true);
 #elif BUFFERIMPL == 3 // T**
-          if (nFrames != mNumFrames) ResetBuffer(mNumChannels, nFrames);
+          if (nFrames != mNumFrames)
+            ResetBuffer(mNumChannels, nFrames);
 #endif
         }
       }
@@ -90,7 +92,8 @@ namespace SR {
 #elif BUFFERIMPL == 2 // ptr
         // TODO
 #elif BUFFERIMPL == 3 // T**
-        if (nChannels != mNumChannels) ResetBuffer(nChannels, mNumFrames);
+        if (nChannels != mNumChannels)
+          ResetBuffer(nChannels, mNumFrames);
 #endif
       }
 
@@ -258,6 +261,15 @@ namespace SR {
         return sum;
       }
 
+      // Sum all data of all channels
+      T SumBufferAbs() {
+        T sum = (T)0.0;
+        for (int c = 0; c < mNumChannels; c++) {
+          sum += SumBufferAbs(c);
+        }
+        return sum;
+        }
+
       // Sum data of specified channel
       T SumBuffer(int channel) {
         T sum = (T)0.0;
@@ -273,10 +285,46 @@ namespace SR {
         return sum;
       }
 
-      // Calculate average of all data of all channels
+      // Sum abs data of specified channel
+      T SumBufferAbs(int channel) {
+        T sum = (T)0.0;
+        for (int s = 0; s < mNumFrames; s++) {
+#if BUFFERIMPL == 1 // vector
+          sum += std::fabs((T)mBuffer[channel].Get()[s]);
+#elif BUFFERIMPL == 2 // ptr
+          sum += std::fabs((T)mBuffer.Get(channel)->Get()[s]);
+#elif BUFFERIMPL == 3 // T**
+          sum += std::fabs((T)mBuffer[channel][s]);
+#endif
+        }
+        return sum;
+      }
+
+      // Calculate average of all data over all channels
       T AverageBuffer() { return SumBuffer() / (mNumFrames * mNumChannels); }
+
       // Calculate average of data of specified channel
       T AverageBuffer(int channel) { return SumBuffer(channel) / (T)mNumFrames; }
+
+
+      // Calculate average of all abs data over all channels
+      T AverageBufferAbs() { return SumBufferAbs() / (mNumFrames * mNumChannels); }
+
+      // Calculate average of abs data of specified channel
+      T AverageBufferAbs(int channel) { return SumBufferAbs(channel) / (T)mNumFrames; }
+
+      T GetMax(int channel) {
+        T max = (T)0.0;
+        for (int s = 0; s < mNumFrames; s++) {
+#if BUFFERIMPL == 3 // T**
+          max = std::max(max, (T)mBuffer[channel][s]);
+#endif
+        }
+        return max;
+      }
+
+
+      T GetMin() {}
 
     private:
       unsigned int mNumFrames;
