@@ -472,7 +472,7 @@ namespace SR {
       sampleOvershootDb = currentOvershootDb - DC_OFFSET;   // subtract DC offset to avoid denormal
 
       // Calculate gain reduction with knee
-      double grRaw, grlimit, grlimitsqrt;
+      double grRaw/*, grlimit, grlimitsqrt*/;
       // above knee
       if (sampleOvershootDb > mKneeWidthDb * 0.5)
         grRaw = (mRatio - 1.) * (sampleOvershootDb);
@@ -492,8 +492,9 @@ namespace SR {
       //    ? grRaw + ((1. - grlimitsqrt) * (grRaw - (mMaxGr * 0.5))) / grlimit
       //    : grRaw;
       //}
-      if (grRaw <= mMaxGr) {
-        grRaw = mMaxGr + 0.5 * mMaxGr / (grRaw - mMaxGr - 1.);
+      if (grRaw < mMaxGr && mMaxGr < 0.0) {
+        //grRaw = mMaxGr + 0.5 * mMaxGr / (grRaw - mMaxGr - 1.);
+        grRaw = mMaxGr - std::tanh(mMaxGr - grRaw);
       }
 
       mGrDb = grRaw; // Store logarithmic gain reduction
