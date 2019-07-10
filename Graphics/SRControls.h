@@ -47,7 +47,7 @@ namespace SR {
           IColor(255, 23, 23, 23),
           IColor(255, 243, 243, 243),
         };
-        IColor GetColor(ESRCustomColors color = kDefault) { return mColors[color]; }
+        IColor GetColor(SR::Graphics::Layout::ESRCustomColors color = kDefault) { return mColors[color]; }
       };
 
       SRCustomColors color;
