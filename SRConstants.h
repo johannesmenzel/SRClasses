@@ -62,6 +62,7 @@ struct SRParamProperties {
   const IParam::EFlags Flags = IParam::EFlags::kFlagsNone;
   const IParam::EParamUnit Unit = IParam::EParamUnit::kUnitCustom;
   const int Knobs = 0; // Used control bitmap
+  const IColor Color = DEFAULT_FGCOLOR;
   const struct Position
   {
     const int AttachToControlPanel = 0; // Panel where control should appear
