@@ -16,73 +16,185 @@ namespace SR {
   namespace Graphics {
     namespace Layout {
 
+      class SRCustomStyles {
+      public:
+        enum ECustomStyles {
+          kDefault = 0,
+          kKnob,
+          kButton,
+          kFader,
+          kMeter,
+          kGraph,
+          kNumCustomStyles
+        };
 
+        SRCustomStyles(
+          IVStyle defaultStyle = DEFAULT_STYLE,
+          IVStyle knobStyle = DEFAULT_STYLE,
+          IVStyle buttonStyle = DEFAULT_STYLE,
+          IVStyle faderStyle = DEFAULT_STYLE,
+          IVStyle meterStyle = DEFAULT_STYLE,
+          IVStyle graphStyle = DEFAULT_STYLE
+        )
+          : mStyles{ defaultStyle, knobStyle, buttonStyle, faderStyle, meterStyle, graphStyle } {}
 
+        IVStyle GetStyle(ECustomStyles type) const { return mStyles[type]; }
+        void SetStyle(ECustomStyles type, IVStyle style) { mStyles[type] = style; }
 
-      enum ESRCustomColors {
-        kDefault = 0,
-        kPluginBg,
-        kPanelBg,
-        kBlue,
-        kRed,
-        kGreen,
-        kOrange,
-        kYellow,
-        kBlack,
-        kWhite,
-        kNumCustomColors
+      private:
+        IVStyle mStyles[ECustomStyles::kNumCustomStyles];
       };
+
 
       // Colors
-      const struct SRCustomColors {
-        IColor mColors[ESRCustomColors::kNumCustomColors] = {
-          COLOR_LIGHT_GRAY,
-          IColor(255, 37, 53, 69),
-          IColor(255, 50, 75, 95),
-          IColor(255, 62, 100, 121),
-          IColor(255, 131, 18, 18),
-          IColor(255, 103, 141, 52),
-          IColor(255, 234, 158, 19),
-          IColor(255, 219, 181, 30),
-          IColor(255, 23, 23, 23),
-          IColor(255, 243, 243, 243),
+      class SRCustomColors {
+      public:
+        enum ECustomColors {
+          kDefault = 0,
+          kPluginBg,
+          kPanelBg,
+          kBlue,
+          kRed,
+          kGreen,
+          kOrange,
+          kYellow,
+          kBlack,
+          kWhite,
+          kNumCustomColors
         };
-        IColor GetColor(SR::Graphics::Layout::ESRCustomColors color = kDefault) { return mColors[color]; }
+
+        SRCustomColors(
+          IVColorSpec colorSpec,
+          IColor defaultColor,
+          IColor pluginColor,
+          IColor panelColor,
+          IColor blue,
+          IColor red,
+          IColor green,
+          IColor orange,
+          IColor yellow,
+          IColor black,
+          IColor white
+        )
+          : mColorSpec(colorSpec)
+          , mColors{ defaultColor, pluginColor, panelColor, blue, red, green, orange, yellow, black, white }
+        {}
+
+        IColor GetColor(ECustomColors type = ECustomColors::kDefault) const { return mColors[type]; }
+        IColor GetColorWithAlpha(ECustomColors type = ECustomColors::kDefault, float alpha = 255.f) const { IColor tempcolor = mColors[type]; tempcolor.A = alpha; return tempcolor; }
+        IVColorSpec GetColorSpec() const { return mColorSpec; }
+        void SetColor(ECustomColors type, IColor& color) { mColors[type] = color; }
+        void SetColorSpec(IVColorSpec& colorSpec) { mColorSpec = colorSpec; }
+
+      private:
+        IColor mColors[ECustomColors::kNumCustomColors];
+        IVColorSpec mColorSpec;
       };
 
-      SRCustomColors color;
 
-      // Texts
-      const struct SRCustomTexts {
-        const float size = 14.f;
-        const IText textLabel = IText(size, color.GetColor(kDefault), nullptr, EAlign::Center, EVAlign::Top);
-        const IText textValue = IText(size, color.GetColor(kDefault), nullptr, EAlign::Center, EVAlign::Bottom);
-        const IText textVersionString = IText(20.f, color.GetColor(kDefault), nullptr, EAlign::Near, EVAlign::Middle);
-        const IText textPresetMenu = IText(2.f * size, color.GetColor(kDefault), nullptr, EAlign::Center, EVAlign::Middle);
+
+      class SRCustomTexts {
+      public:
+
+        enum ECustomTexts {
+          kDefault = 0,
+          kKnobLabel,
+          kKnobValue,
+          kButtonLabel,
+          kButtonValue,
+          kVersionString,
+          kPresetMenu,
+          kNumCustomTexts
+        };
+
+        SRCustomTexts(
+          float size,
+          IText defaultText,
+          IText knobLabel,
+          IText knobValue,
+          IText buttonLabel,
+          IText buttonValue,
+          IText versionString,
+          IText presetMenu
+        )
+          : mSize(size)
+          , mTexts{ defaultText, knobLabel, knobValue, buttonLabel, buttonValue, versionString, presetMenu }
+        {}
+
+        IText GetText(SR::Graphics::Layout::SRCustomTexts::ECustomTexts type = SR::Graphics::Layout::SRCustomTexts::ECustomTexts::kDefault) const { return mTexts[type]; }
+        void SetText(SR::Graphics::Layout::SRCustomTexts::ECustomTexts type, IText& text) { mTexts[type] = text; }
+
+      private:
+        float mSize;
+        IText mTexts[ECustomTexts::kNumCustomTexts];
       };
 
-      SRCustomTexts text;
 
-      const struct SRLayout {
 
-        const SRCustomColors colors;
-        const SRCustomTexts texts;
+      class SRLayout
+        : public SRCustomColors
+        , public SRCustomTexts
+        , public SRCustomStyles
+      {
+      public:
+        SRLayout(SRCustomColors colors, SRCustomTexts texts, SRCustomStyles styles)
+          : SRCustomColors(colors)
+          , SRCustomTexts(texts)
+          , SRCustomStyles(styles)
+        {};
+        ~SRLayout() {};
 
+        //IColor GetCustomColor(SRCustomColors::ECustomColors color = SRCustomColors::ECustomColors::kDefault) { return mColors.GetColor(color); }
+        //IColor GetColorSpecColor(EVColor type) { return mColors.GetColorSpec().GetColor(type); }
+        //IVColorSpec GetColorSpec() { return mColors.GetColorSpec(); }
+        //IText GetCustomText(SRCustomTexts::ECustomTexts text = SRCustomTexts::ECustomTexts::kDefault) { return mTexts.GetText(text); }
+        //IVStyle GetStyle() { return mStyles; }
+
+      private:
+      };
+
+
+      const SRCustomColors SR_DEFAULT_CUSTOM_COLORS = SRCustomColors(
         // Color Specs
-        const IVColorSpec SRColorSpec = {
+        IVColorSpec{
           DEFAULT_BGCOLOR,            // Background (DEFAULT_BGCOLOR = COLOR_TRANSPARENT(0, 0, 0, 0))
           DEFAULT_FGCOLOR,            // Foreground (DEFAULT_FGCOLOR = COLOR_MID_GRAY(255, 200, 200, 200))
           IColor(255, 234, 158, 19), // Pressed    (DEFAULT_PRCOLOR = COLOR_LIGHT_GRAY(255, 240, 240, 240))
-          IColor(255, 70, 70, 70),    // Frame      (DEFAULT_FRCOLOR = COLOR_DARK_GRAY(255, 70, 70, 70))
+          IColor(255, 150, 150, 150),    // Frame      (DEFAULT_FRCOLOR = COLOR_DARK_GRAY(255, 70, 70, 70))
           IColor(30, 255, 255, 255),  // Higlight   (DEFAULT_HLCOLOR = COLOR_TRANSLUCENT(10, 0, 0, 0))
           IColor(100, 0, 0, 0),       // Shadow     (DEFAULT_SHCOLOR = IColor(60, 0, 0, 0)
           IColor(255, 234, 158, 19),  // Extra 1    (DEFAULT_X1COLOR = COLOR_RED(255, 255, 0, 0))
           IColor(255, 48, 166, 186),  // Extra 2    (DEFAULT_X2COLOR = COLOR_GREEN(255, 0, 255, 0))
           IColor(255, 249, 206, 34),  // Extra 3    (DEFAULT_X3COLOR = COLOR_BLUE(255, 0, 0, 255))
-        };
+        },
+        COLOR_LIGHT_GRAY,
+        IColor(255, 12, 17, 23),
+        IColor(255, 50, 75, 95),
+        IColor(255, 62, 100, 121),
+        IColor(255, 131, 18, 18),
+        IColor(255, 103, 141, 52),
+        IColor(255, 234, 158, 19),
+        IColor(255, 219, 181, 30),
+        IColor(255, 23, 23, 23),
+        IColor(255, 243, 243, 243)
+        );
 
-        // Styles
-        const IVStyle SRStyleKnob = IVStyle(
+
+      const SRCustomTexts SR_DEFAULT_CUSTOM_TEXTS = SRCustomTexts(
+        DEFAULT_TEXT_SIZE,
+        IText(DEFAULT_TEXT_SIZE, SR_DEFAULT_CUSTOM_COLORS.GetColor(SRCustomColors::ECustomColors::kDefault), nullptr, EAlign::Center, EVAlign::Top),
+        IText(DEFAULT_TEXT_SIZE, SR_DEFAULT_CUSTOM_COLORS.GetColor(SRCustomColors::ECustomColors::kDefault), nullptr, EAlign::Center, EVAlign::Top),
+        IText(DEFAULT_TEXT_SIZE, SR_DEFAULT_CUSTOM_COLORS.GetColor(SRCustomColors::ECustomColors::kDefault), nullptr, EAlign::Center, EVAlign::Bottom),
+        IText(DEFAULT_TEXT_SIZE, SR_DEFAULT_CUSTOM_COLORS.GetColor(SRCustomColors::ECustomColors::kDefault), nullptr, EAlign::Center, EVAlign::Bottom),
+        IText(DEFAULT_TEXT_SIZE, SR_DEFAULT_CUSTOM_COLORS.GetColor(SRCustomColors::ECustomColors::kDefault), nullptr, EAlign::Center, EVAlign::Bottom),
+        IText(1.5f * DEFAULT_TEXT_SIZE, SR_DEFAULT_CUSTOM_COLORS.GetColor(SRCustomColors::ECustomColors::kDefault), nullptr, EAlign::Near, EVAlign::Middle),
+        IText(2.f * DEFAULT_TEXT_SIZE, SR_DEFAULT_CUSTOM_COLORS.GetColor(SRCustomColors::ECustomColors::kDefault), nullptr, EAlign::Center, EVAlign::Middle)
+      );
+
+
+      const SRCustomStyles SR_DEFAULT_CUSTOM_STYLE = SRCustomStyles(
+        // DEFAULT:
+        IVStyle(
           true,
           true,
           {
@@ -96,8 +208,8 @@ namespace SR {
             IColor(255, 48, 166, 186),  // Extra 2    (DEFAULT_X2COLOR = COLOR_GREEN(255, 0, 255, 0))
             IColor(255, 249, 206, 34),  // Extra 3    (DEFAULT_X3COLOR = COLOR_BLUE(255, 0, 0, 255))
           },
-          text.textLabel,
-          text.textValue,
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kKnobLabel),
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kKnobValue),
           true,
           true,
           true,
@@ -106,14 +218,42 @@ namespace SR {
           3.f, // shadow-off
           DEFAULT_WIDGET_FRAC,
           DEFAULT_WIDGET_ANGLE
-          );
+          ),
 
-        const IVStyle SRStyleButton = IVStyle(
+        // KNOB:
+        IVStyle(
+          true,
+          true,
+          {
+            DEFAULT_BGCOLOR,            // Background (DEFAULT_BGCOLOR = COLOR_TRANSPARENT(0, 0, 0, 0))
+            DEFAULT_FGCOLOR,            // Foreground (DEFAULT_FGCOLOR = COLOR_MID_GRAY(255, 200, 200, 200))
+            IColor(255, 234, 158, 19), // Pressed    (DEFAULT_PRCOLOR = COLOR_LIGHT_GRAY(255, 240, 240, 240))
+            IColor(255, 150, 150, 150), // Frame      (DEFAULT_FRCOLOR = COLOR_DARK_GRAY(255, 70, 70, 70))
+            IColor(30, 255, 255, 255),  // Higlight   (DEFAULT_HLCOLOR = COLOR_TRANSLUCENT(10, 0, 0, 0))
+            IColor(100, 0, 0, 0),       // Shadow     (DEFAULT_SHCOLOR = IColor(60, 0, 0, 0)
+            IColor(255, 234, 158, 19),  // Extra 1    (DEFAULT_X1COLOR = COLOR_RED(255, 255, 0, 0)
+            IColor(255, 48, 166, 186),  // Extra 2    (DEFAULT_X2COLOR = COLOR_GREEN(255, 0, 255, 0))
+            IColor(255, 249, 206, 34),  // Extra 3    (DEFAULT_X3COLOR = COLOR_BLUE(255, 0, 0, 255))
+          },
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kKnobLabel),
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kKnobValue),
+          true,
+          true,
+          true,
+          0.1f, // roundness
+          2.f, // frame-thick, def: 1.f
+          3.f, // shadow-off
+          DEFAULT_WIDGET_FRAC,
+          DEFAULT_WIDGET_ANGLE
+          ),
+
+        // BUTTON:
+        IVStyle(
           false,
           true,
           {
             DEFAULT_BGCOLOR,            // Background (DEFAULT_BGCOLOR = COLOR_TRANSPARENT(0, 0, 0, 0))
-            color.GetColor(kPluginBg),            // Foreground (DEFAULT_FGCOLOR = COLOR_MID_GRAY(255, 200, 200, 200))
+            IColor(255, 30, 50, 70),            // Foreground (DEFAULT_FGCOLOR = COLOR_MID_GRAY(255, 200, 200, 200))
             IColor(255, 234, 158, 19), // Pressed    (DEFAULT_PRCOLOR = COLOR_LIGHT_GRAY(255, 240, 240, 240))
             IColor(255, 150, 150, 150),    // Frame      (DEFAULT_FRCOLOR = COLOR_DARK_GRAY(255, 70, 70, 70))
             IColor(30, 255, 255, 255),  // Higlight   (DEFAULT_HLCOLOR = COLOR_TRANSLUCENT(10, 0, 0, 0))
@@ -122,8 +262,8 @@ namespace SR {
             IColor(255, 48, 166, 186),  // Extra 2    (DEFAULT_X2COLOR = COLOR_GREEN(255, 0, 255, 0))
             IColor(255, 249, 206, 34),  // Extra 3    (DEFAULT_X3COLOR = COLOR_BLUE(255, 0, 0, 255))
           },
-          IText(text.size * 0.8f, color.GetColor(kDefault), nullptr, EAlign::Center, EVAlign::Bottom),
-          IText(text.size * 0.8f, color.GetColor(kDefault), nullptr, EAlign::Center, EVAlign::Bottom),
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kButtonLabel),
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kButtonValue),
           true,
           false,
           true,
@@ -132,11 +272,121 @@ namespace SR {
           3.f, // shadow-off
           DEFAULT_WIDGET_FRAC,
           DEFAULT_WIDGET_ANGLE
-          );
+          ),
 
+        // FADER:
+        IVStyle(
+          false,
+          true,
+          {
+            DEFAULT_BGCOLOR,            // Background (DEFAULT_BGCOLOR = COLOR_TRANSPARENT(0, 0, 0, 0))
+            SR_DEFAULT_CUSTOM_COLORS.GetColor(SRCustomColors::ECustomColors::kPluginBg),            // Foreground (DEFAULT_FGCOLOR = COLOR_MID_GRAY(255, 200, 200, 200))
+            IColor(255, 234, 158, 19), // Pressed    (DEFAULT_PRCOLOR = COLOR_LIGHT_GRAY(255, 240, 240, 240))
+            IColor(255, 150, 150, 150),    // Frame      (DEFAULT_FRCOLOR = COLOR_DARK_GRAY(255, 70, 70, 70))
+            IColor(30, 255, 255, 255),  // Higlight   (DEFAULT_HLCOLOR = COLOR_TRANSLUCENT(10, 0, 0, 0))
+            IColor(100, 0, 0, 0),       // Shadow     (DEFAULT_SHCOLOR = IColor(60, 0, 0, 0)
+            IColor(255, 234, 158, 19),  // Extra 1    (DEFAULT_X1COLOR = COLOR_RED(255, 255, 0, 0)
+            IColor(255, 48, 166, 186),  // Extra 2    (DEFAULT_X2COLOR = COLOR_GREEN(255, 0, 255, 0))
+            IColor(255, 249, 206, 34),  // Extra 3    (DEFAULT_X3COLOR = COLOR_BLUE(255, 0, 0, 255))
+          },
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kButtonLabel),
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kButtonValue),
+          true,
+          false,
+          true,
+          0.5f, // roundness
+          2.f, // frame-thick
+          3.f, // shadow-off
+          DEFAULT_WIDGET_FRAC,
+          DEFAULT_WIDGET_ANGLE
+          ),
+
+        // METER:
+        IVStyle(
+          false,
+          true,
+          {
+            DEFAULT_BGCOLOR,            // Background (DEFAULT_BGCOLOR = COLOR_TRANSPARENT(0, 0, 0, 0))
+            SR_DEFAULT_CUSTOM_COLORS.GetColor(SRCustomColors::ECustomColors::kPluginBg),            // Foreground (DEFAULT_FGCOLOR = COLOR_MID_GRAY(255, 200, 200, 200))
+            IColor(255, 234, 158, 19), // Pressed    (DEFAULT_PRCOLOR = COLOR_LIGHT_GRAY(255, 240, 240, 240))
+            IColor(255, 150, 150, 150),    // Frame      (DEFAULT_FRCOLOR = COLOR_DARK_GRAY(255, 70, 70, 70))
+            IColor(30, 255, 255, 255),  // Higlight   (DEFAULT_HLCOLOR = COLOR_TRANSLUCENT(10, 0, 0, 0))
+            IColor(100, 0, 0, 0),       // Shadow     (DEFAULT_SHCOLOR = IColor(60, 0, 0, 0)
+            IColor(255, 234, 158, 19),  // Extra 1    (DEFAULT_X1COLOR = COLOR_RED(255, 255, 0, 0)
+            IColor(255, 48, 166, 186),  // Extra 2    (DEFAULT_X2COLOR = COLOR_GREEN(255, 0, 255, 0))
+            IColor(255, 249, 206, 34),  // Extra 3    (DEFAULT_X3COLOR = COLOR_BLUE(255, 0, 0, 255))
+          },
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kButtonLabel),
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kButtonValue),
+          true,
+          false,
+          true,
+          0.5f, // roundness
+          2.f, // frame-thick
+          3.f, // shadow-off
+          DEFAULT_WIDGET_FRAC,
+          DEFAULT_WIDGET_ANGLE
+          ),
+              
+        // GRAPH:
+        IVStyle(
+          false,
+          true,
+          {
+            DEFAULT_BGCOLOR,            // Background (DEFAULT_BGCOLOR = COLOR_TRANSPARENT(0, 0, 0, 0))
+            SR_DEFAULT_CUSTOM_COLORS.GetColor(SRCustomColors::ECustomColors::kPluginBg),            // Foreground (DEFAULT_FGCOLOR = COLOR_MID_GRAY(255, 200, 200, 200))
+            SR_DEFAULT_CUSTOM_COLORS.GetColorWithAlpha(SRCustomColors::ECustomColors::kGreen, 60.f), // Pressed    (DEFAULT_PRCOLOR = COLOR_LIGHT_GRAY(255, 240, 240, 240))
+            IColor(255, 150, 150, 150),    // Frame      (DEFAULT_FRCOLOR = COLOR_DARK_GRAY(255, 70, 70, 70))
+            SR_DEFAULT_CUSTOM_COLORS.GetColorWithAlpha(SRCustomColors::ECustomColors::kGreen, 30.f),  // Higlight   (DEFAULT_HLCOLOR = COLOR_TRANSLUCENT(10, 0, 0, 0))
+            IColor(100, 0, 0, 0),       // Shadow     (DEFAULT_SHCOLOR = IColor(60, 0, 0, 0)
+            SR_DEFAULT_CUSTOM_COLORS.GetColorWithAlpha(SRCustomColors::ECustomColors::kGreen, 60.f),  // Extra 1    (DEFAULT_X1COLOR = COLOR_RED(255, 255, 0, 0)
+            IColor(255, 48, 166, 186),  // Extra 2    (DEFAULT_X2COLOR = COLOR_GREEN(255, 0, 255, 0))
+            IColor(255, 249, 206, 34),  // Extra 3    (DEFAULT_X3COLOR = COLOR_BLUE(255, 0, 0, 255))
+          },
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kButtonLabel),
+          SR_DEFAULT_CUSTOM_TEXTS.GetText(SRCustomTexts::ECustomTexts::kButtonValue),
+          true,
+          false,
+          true,
+          0.5f, // roundness
+          2.f, // frame-thick
+          3.f, // shadow-off
+          DEFAULT_WIDGET_FRAC,
+          DEFAULT_WIDGET_ANGLE
+          )
+      );
+
+
+
+      const SRLayout SR_DEFAULT_LAYOUT = SRLayout(
+        SR_DEFAULT_CUSTOM_COLORS,
+        SR_DEFAULT_CUSTOM_TEXTS,
+        SR_DEFAULT_CUSTOM_STYLE
+      );
+
+      const SRLayout layout = SR_DEFAULT_LAYOUT;
+
+
+      // Maybe we can make something out of this?
+      struct SRStyle
+        : public IVStyle {
+        SRStyle(bool showLabel = DEFAULT_SHOW_LABEL,
+          bool showValue = DEFAULT_SHOW_VALUE,
+          const std::initializer_list<IColor>& colors = { DEFAULT_BGCOLOR, DEFAULT_FGCOLOR, DEFAULT_PRCOLOR, DEFAULT_FRCOLOR, DEFAULT_HLCOLOR, DEFAULT_SHCOLOR, DEFAULT_X1COLOR, DEFAULT_X2COLOR, DEFAULT_X3COLOR },
+          const IText& labelText = DEFAULT_LABEL_TEXT,
+          const IText& valueText = DEFAULT_VALUE_TEXT,
+          bool hideCursor = DEFAULT_HIDE_CURSOR,
+          bool drawFrame = DEFAULT_DRAW_FRAME,
+          bool drawShadows = DEFAULT_DRAW_SHADOWS,
+          float roundness = DEFAULT_ROUNDNESS,
+          float frameThickness = DEFAULT_FRAME_THICKNESS,
+          float shadowOffset = DEFAULT_SHADOW_OFFSET,
+          float widgetFrac = DEFAULT_WIDGET_FRAC,
+          float angle = DEFAULT_WIDGET_ANGLE)
+          : IVStyle(showLabel, showValue, colors, labelText, valueText, hideCursor, drawFrame, drawShadows, roundness, frameThickness, shadowOffset, widgetFrac, angle)
+        {}
       };
 
-      SRLayout layout;
 
     }
 
@@ -176,11 +426,12 @@ namespace SR {
         float mLightZ;
       };
 
-      const SRRoomInfo DEFAULT_ROOMINFO = SRRoomInfo();
+      const SRRoomInfo SR_DEFAULT_ROOMINFO = SRRoomInfo();
 
       /** A base interface to be combined with IControl for vectorial controls "IVControls", in order for them to share a common style
    * If you need more flexibility, you're on your own! */
       class SRVectorBase
+        : public IVectorBase
       {
       public:
         SRVectorBase(const IColor* pBGColor = &DEFAULT_BGCOLOR,
@@ -192,170 +443,170 @@ namespace SR {
           const IColor* pX1Color = &DEFAULT_X1COLOR,
           const IColor* pX2Color = &DEFAULT_X2COLOR,
           const IColor* pX3Color = &DEFAULT_X3COLOR)
+          : IVectorBase(pBGColor, pFGColor, pPRColor, pFRColor, pHLColor, pSHColor, pX1Color, pX2Color, pX3Color)
         {
           AddColors(pBGColor, pFGColor, pPRColor, pFRColor, pHLColor, pSHColor, pX1Color, pX2Color, pX3Color);
         }
 
-        SRVectorBase(const IVStyle& style, bool labelInWidget = false, bool valueInWidget = false, SRRoomInfo roomInfo = SRRoomInfo())
-          : mLabelInWidget(labelInWidget)
-          , mValueInWidget(valueInWidget)
+        SRVectorBase(const IVStyle& style, bool labelInWidget = false, bool valueInWidget = false, SRRoomInfo roomInfo = SR_DEFAULT_ROOMINFO)
+          : IVectorBase(style, labelInWidget, valueInWidget)
           , mRoomInfo(roomInfo)
         {
           SetStyle(style);
         }
 
-        void AttachIControl(IControl* pControl, const char* label)
-        {
-          mControl = pControl;
-          mLabelStr.Set(label);
-        }
+        //void AttachIControl(IControl* pControl, const char* label)
+        //{
+        //  mControl = pControl;
+        //  mLabelStr.Set(label);
+        //}
 
-        void AddColor(const IColor& color)
-        {
-          mColors.Add(color);
-        }
+        //void AddColor(const IColor& color)
+        //{
+        //  mColors.Add(color);
+        //}
 
-        void AddColors(const IColor* pBGColor = 0,
-          const IColor* pFGColor = 0,
-          const IColor* pPRColor = 0,
-          const IColor* pFRColor = 0,
-          const IColor* pHLColor = 0,
-          const IColor* pSHColor = 0,
-          const IColor* pX1Color = 0,
-          const IColor* pX2Color = 0,
-          const IColor* pX3Color = 0)
-        {
-          if (pBGColor) AddColor(*pBGColor);
-          if (pFGColor) AddColor(*pFGColor);
-          if (pPRColor) AddColor(*pPRColor);
-          if (pFRColor) AddColor(*pFRColor);
-          if (pHLColor) AddColor(*pHLColor);
-          if (pSHColor) AddColor(*pSHColor);
-          if (pX1Color) AddColor(*pX1Color);
-          if (pX2Color) AddColor(*pX2Color);
-          if (pX3Color) AddColor(*pX3Color);
-        }
+        //void AddColors(const IColor* pBGColor = 0,
+        //  const IColor* pFGColor = 0,
+        //  const IColor* pPRColor = 0,
+        //  const IColor* pFRColor = 0,
+        //  const IColor* pHLColor = 0,
+        //  const IColor* pSHColor = 0,
+        //  const IColor* pX1Color = 0,
+        //  const IColor* pX2Color = 0,
+        //  const IColor* pX3Color = 0)
+        //{
+        //  if (pBGColor) AddColor(*pBGColor);
+        //  if (pFGColor) AddColor(*pFGColor);
+        //  if (pPRColor) AddColor(*pPRColor);
+        //  if (pFRColor) AddColor(*pFRColor);
+        //  if (pHLColor) AddColor(*pHLColor);
+        //  if (pSHColor) AddColor(*pSHColor);
+        //  if (pX1Color) AddColor(*pX1Color);
+        //  if (pX2Color) AddColor(*pX2Color);
+        //  if (pX3Color) AddColor(*pX3Color);
+        //}
 
-        void SetColor(int colorIdx, const IColor& color)
-        {
-          if (colorIdx < mColors.GetSize())
-            mColors.Get()[colorIdx] = color;
+        //void SetColor(int colorIdx, const IColor& color)
+        //{
+        //  if (colorIdx < mColors.GetSize())
+        //    mColors.Get()[colorIdx] = color;
 
-          mControl->SetDirty(false);
-        }
+        //  mControl->SetDirty(false);
+        //}
 
-        void SetColors(const IColor& BGColor,
-          const IColor& FGColor,
-          const IColor& PRColor,
-          const IColor& FRColor,
-          const IColor& HLColor,
-          const IColor& SHColor,
-          const IColor& X1Color,
-          const IColor& X2Color,
-          const IColor& X3Color)
-        {
-          mColors.Get()[kBG] = BGColor;
-          mColors.Get()[kFG] = FGColor;
-          mColors.Get()[kPR] = PRColor;
-          mColors.Get()[kFR] = FRColor;
-          mColors.Get()[kHL] = HLColor;
-          mColors.Get()[kSH] = SHColor;
-          mColors.Get()[kX1] = X1Color;
-          mColors.Get()[kX2] = X2Color;
-          mColors.Get()[kX3] = X3Color;
-        }
+        //void SetColors(const IColor& BGColor,
+        //  const IColor& FGColor,
+        //  const IColor& PRColor,
+        //  const IColor& FRColor,
+        //  const IColor& HLColor,
+        //  const IColor& SHColor,
+        //  const IColor& X1Color,
+        //  const IColor& X2Color,
+        //  const IColor& X3Color)
+        //{
+        //  mColors.Get()[kBG] = BGColor;
+        //  mColors.Get()[kFG] = FGColor;
+        //  mColors.Get()[kPR] = PRColor;
+        //  mColors.Get()[kFR] = FRColor;
+        //  mColors.Get()[kHL] = HLColor;
+        //  mColors.Get()[kSH] = SHColor;
+        //  mColors.Get()[kX1] = X1Color;
+        //  mColors.Get()[kX2] = X2Color;
+        //  mColors.Get()[kX3] = X3Color;
+        //}
 
-        void SetColors(const IVColorSpec& spec)
-        {
-          SetColors(spec.GetColor(kBG),
-            spec.GetColor(kFG),
-            spec.GetColor(kPR),
-            spec.GetColor(kFR),
-            spec.GetColor(kHL),
-            spec.GetColor(kSH),
-            spec.GetColor(kX1),
-            spec.GetColor(kX2),
-            spec.GetColor(kX3));
-        }
+        //void SetColors(const IVColorSpec& spec)
+        //{
+        //  SetColors(spec.GetColor(kBG),
+        //    spec.GetColor(kFG),
+        //    spec.GetColor(kPR),
+        //    spec.GetColor(kFR),
+        //    spec.GetColor(kHL),
+        //    spec.GetColor(kSH),
+        //    spec.GetColor(kX1),
+        //    spec.GetColor(kX2),
+        //    spec.GetColor(kX3));
+        //}
 
-        const IColor& GetColor(int colorIdx) const
-        {
-          if (colorIdx < mColors.GetSize())
-            return mColors.Get()[colorIdx];
-          else
-            return mColors.Get()[0];
-        }
+        //const IColor& GetColor(int colorIdx) const
+        //{
+        //  if (colorIdx < mColors.GetSize())
+        //    return mColors.Get()[colorIdx];
+        //  else
+        //    return mColors.Get()[0];
+        //}
 
-        void SetLabelStr(const char* label) { mLabelStr.Set(label); mControl->SetDirty(false); }
-        void SetValueStr(const char* value) { mValueStr.Set(value); mControl->SetDirty(false); }
-        void SetWidgetFrac(float frac) { mStyle.widgetFrac = Clip(frac, 0.f, 1.f);  mControl->OnResize(); mControl->SetDirty(false); }
-        void SetAngle(float angle) { mStyle.angle = Clip(angle, 0.f, 360.f);  mControl->SetDirty(false); }
-        void SetShowLabel(bool show) { mStyle.showLabel = show;  mControl->OnResize(); mControl->SetDirty(false); }
-        void SetShowValue(bool show) { mStyle.showValue = show;  mControl->OnResize(); mControl->SetDirty(false); }
-        void SetRoundness(float roundness) { mStyle.roundness = Clip(roundness, 0.f, 1.f); mControl->SetDirty(false); }
-        void SetDrawFrame(bool draw) { mStyle.drawFrame = draw; mControl->SetDirty(false); }
-        void SetDrawShadows(bool draw) { mStyle.drawShadows = draw; mControl->SetDirty(false); }
-        void SetShadowOffset(float offset) { mStyle.shadowOffset = offset; mControl->SetDirty(false); }
-        void SetFrameThickness(float thickness) { mStyle.frameThickness = thickness; mControl->SetDirty(false); }
-        void SetSplashRadius(float radius) { mSplashRadius = radius * mMaxSplashRadius; }
+        //void SetLabelStr(const char* label) { mLabelStr.Set(label); mControl->SetDirty(false); }
+        //void SetValueStr(const char* value) { mValueStr.Set(value); mControl->SetDirty(false); }
+        //void SetWidgetFrac(float frac) { mStyle.widgetFrac = Clip(frac, 0.f, 1.f);  mControl->OnResize(); mControl->SetDirty(false); }
+        //void SetAngle(float angle) { mStyle.angle = Clip(angle, 0.f, 360.f);  mControl->SetDirty(false); }
+        //void SetShowLabel(bool show) { mStyle.showLabel = show;  mControl->OnResize(); mControl->SetDirty(false); }
+        //void SetShowValue(bool show) { mStyle.showValue = show;  mControl->OnResize(); mControl->SetDirty(false); }
+        //void SetRoundness(float roundness) { mStyle.roundness = Clip(roundness, 0.f, 1.f); mControl->SetDirty(false); }
+        //void SetDrawFrame(bool draw) { mStyle.drawFrame = draw; mControl->SetDirty(false); }
+        //void SetDrawShadows(bool draw) { mStyle.drawShadows = draw; mControl->SetDirty(false); }
+        //void SetShadowOffset(float offset) { mStyle.shadowOffset = offset; mControl->SetDirty(false); }
+        //void SetFrameThickness(float thickness) { mStyle.frameThickness = thickness; mControl->SetDirty(false); }
+        //void SetSplashRadius(float radius) { mSplashRadius = radius * mMaxSplashRadius; }
 
-        void SetStyle(const IVStyle& style)
-        {
-          mStyle = style;
-          mColors.Resize(kNumDefaultVColors); // TODO?
-          SetColors(style.colorSpec);
-        }
+        //void SetStyle(const IVStyle& style)
+        //{
+        //  mStyle = style;
+        //  mColors.Resize(kNumDefaultVColors); // TODO?
+        //  SetColors(style.colorSpec);
+        //}
 
-        IRECT GetAdjustedHandleBounds(IRECT handleBounds) const
-        {
-          if (mStyle.drawFrame)
-            handleBounds.Pad(-0.5f * mStyle.frameThickness);
+      //  IRECT GetAdjustedHandleBounds(IRECT handleBounds) const
+      //  {
+      //    if (mStyle.drawFrame)
+      //      handleBounds.Pad(-0.5f * mStyle.frameThickness);
 
-          if (mStyle.drawShadows)
-            handleBounds.Alter(0, 0, -mStyle.shadowOffset, -mStyle.shadowOffset);
+      //    if (mStyle.drawShadows)
+      //      handleBounds.Alter(0, 0, -mStyle.shadowOffset, -mStyle.shadowOffset);
 
-          return handleBounds;
-        }
+      //    return handleBounds;
+      //  }
 
-        float GetRoundedCornerRadius(const IRECT& bounds) const
-        {
-          if (bounds.W() < bounds.H())
-            return mStyle.roundness * (bounds.W() / 2.f);
-          else
-            return mStyle.roundness * (bounds.H() / 2.f);
-        }
+      //  float GetRoundedCornerRadius(const IRECT& bounds) const
+      //  {
+      //    if (bounds.W() < bounds.H())
+      //      return mStyle.roundness * (bounds.W() / 2.f);
+      //    else
+      //      return mStyle.roundness * (bounds.H() / 2.f);
+      //  }
 
-        void DrawSplash(IGraphics& g)
-        {
-          float mouseDownX, mouseDownY;
-          g.GetMouseDownPoint(mouseDownX, mouseDownY);
-          g.FillCircle(GetColor(kHL), mouseDownX, mouseDownY, mSplashRadius);
-        }
+      //  void DrawSplash(IGraphics& g)
+      //  {
+      //    float mouseDownX, mouseDownY;
+      //    g.GetMouseDownPoint(mouseDownX, mouseDownY);
+      //    g.FillCircle(GetColor(kHL), mouseDownX, mouseDownY, mSplashRadius);
+      //  }
 
-        virtual void DrawBackGround(IGraphics& g, const IRECT& rect)
-        {
-          g.FillRect(GetColor(kBG), rect);
-        }
+      //  virtual void DrawBackGround(IGraphics& g, const IRECT& rect)
+      //  {
+      //    g.FillRect(GetColor(kBG), rect);
+      //  }
 
-        virtual void DrawWidget(IGraphics& g)
-        {
-          // no-op
-        }
+      //  virtual void DrawWidget(IGraphics& g)
+      //  {
+      //    // no-op
+      //  }
 
-        virtual void DrawLabel(IGraphics& g)
-        {
-          if (mLabelBounds.H() && mStyle.showLabel)
-            g.DrawText(mStyle.labelText, mLabelStr.Get(), mLabelBounds);
-        }
+      //  virtual void DrawLabel(IGraphics& g)
+      //  {
+      //    if (mLabelBounds.H() && mStyle.showLabel)
+      //      g.DrawText(mStyle.labelText, mLabelStr.Get(), mLabelBounds);
+      //  }
 
-        virtual void DrawValue(IGraphics& g, bool mouseOver)
-        {
-          if (mouseOver)
-            g.FillRect(COLOR_TRANSLUCENT, mValueBounds);
+      //  virtual void DrawValue(IGraphics& g, bool mouseOver)
+      //  {
+      //    if (mouseOver)
+      //      g.FillRect(COLOR_TRANSLUCENT, mValueBounds);
 
-          if (mStyle.showValue)
-            g.DrawText(mStyle.valueText, mValueStr.Get(), mValueBounds);
-        }
+      //    if (mStyle.showValue)
+      //      g.DrawText(mStyle.valueText, mValueStr.Get(), mValueBounds);
+      //  }
 
         void DrawHandle(IGraphics& g, EVShape shape, const IRECT& bounds, bool pressed, bool mouseOver)
         {
@@ -592,20 +843,20 @@ namespace SR {
         }
 
       protected:
-        IControl* mControl = nullptr;
-        WDL_TypedBuf<IColor> mColors;
-        IVStyle mStyle;
-        bool mLabelInWidget = false;
-        bool mValueInWidget = false;
-        float mSplashRadius = 0.f;
-        float mMaxSplashRadius = 50.f;
-        IRECT mWidgetBounds; // The knob/slider/button
-        IRECT mLabelBounds; // A piece of text above the control
-        IRECT mValueBounds; // Text below the contol, usually displaying the value of a parameter
-        WDL_String mLabelStr;
-        WDL_String mValueStr;
+      //  IControl* mControl = nullptr;
+      //  WDL_TypedBuf<IColor> mColors;
+      //  IVStyle mStyle;
+      //  bool mLabelInWidget = false;
+      //  bool mValueInWidget = false;
+      //  float mSplashRadius = 0.f;
+      //  float mMaxSplashRadius = 50.f;
+      //  IRECT mWidgetBounds; // The knob/slider/button
+      //  IRECT mLabelBounds; // A piece of text above the control
+      //  IRECT mValueBounds; // Text below the contol, usually displaying the value of a parameter
+      //  WDL_String mLabelStr;
+      //  WDL_String mValueStr;
 
-        // Hannes:
+      //  // Hannes:
         SRRoomInfo mRoomInfo;
       };
 
@@ -817,7 +1068,7 @@ namespace SR {
           // KNOB
           g.FillCircle(mUniqueColor, cx, cy, radius);
 
-           // INNER RING
+          // INNER RING
           g.DrawCircle(GetColor(kHL), cx, cy, radius * 0.9f);
 
           // ARROW
@@ -1925,7 +2176,7 @@ namespace SR {
 
         void OnResize() override {
           MakeRects();
-          mText.mSize = std::max(12.f,std::min(mRECT.W() * 0.25f, mRECT.H() / mNumLabels));
+          mText.mSize = std::max(12.f, std::min(mRECT.W() * 0.25f, mRECT.H() / mNumLabels));
         };
 
         //  void OnMouseDblClick(float x, float y, const IMouseMod& mod) override;
