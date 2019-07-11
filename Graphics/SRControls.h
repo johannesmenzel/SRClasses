@@ -327,7 +327,7 @@ namespace SR {
           DEFAULT_WIDGET_FRAC,
           DEFAULT_WIDGET_ANGLE
           ),
-              
+
         // GRAPH:
         IVStyle(
           false,
@@ -413,8 +413,8 @@ namespace SR {
         float GetLightPositionY() { return mLightY; }
         float GetLightPositionZ() { return mLightZ; }
 
-        float GetShadowOffsetX(float cx, float height) { return (cx - mLightX) * height / mLightZ; }
-        float GetShadowOffsetY(float cy, float height) { return (cy - mLightY) * height / mLightZ; }
+        float GetShadowOffsetX(float cx, float height) const { return (cx - mLightX) * height / mLightZ; }
+        float GetShadowOffsetY(float cy, float height) const { return (cy - mLightY) * height / mLightZ; }
         IShadow GetShadowForPart(float cx, float cy, float height) {
           return IShadow(EPatternType::Solid, 1.f, GetShadowOffsetX(cx, height), GetShadowOffsetY(cy, height), 0.5f, true);
         }
@@ -432,6 +432,7 @@ namespace SR {
    * If you need more flexibility, you're on your own! */
       class SRVectorBase
         : public IVectorBase
+        , public SRRoomInfo
       {
       public:
         SRVectorBase(const IColor* pBGColor = &DEFAULT_BGCOLOR,
@@ -450,7 +451,7 @@ namespace SR {
 
         SRVectorBase(const IVStyle& style, bool labelInWidget = false, bool valueInWidget = false, SRRoomInfo roomInfo = SR_DEFAULT_ROOMINFO)
           : IVectorBase(style, labelInWidget, valueInWidget)
-          , mRoomInfo(roomInfo)
+          , SRRoomInfo(roomInfo)
         {
           SetStyle(style);
         }
@@ -557,56 +558,61 @@ namespace SR {
         //  SetColors(style.colorSpec);
         //}
 
-      //  IRECT GetAdjustedHandleBounds(IRECT handleBounds) const
-      //  {
-      //    if (mStyle.drawFrame)
-      //      handleBounds.Pad(-0.5f * mStyle.frameThickness);
+        IRECT GetAdjustedHandleBounds(IRECT handleBounds) const
+        {
+          if (mStyle.drawFrame)
+            handleBounds.Pad(-0.5f * mStyle.frameThickness);
 
-      //    if (mStyle.drawShadows)
-      //      handleBounds.Alter(0, 0, -mStyle.shadowOffset, -mStyle.shadowOffset);
+          if (mStyle.drawShadows)
+            handleBounds.Alter(
+              std::max(-GetShadowOffsetX(handleBounds.MW(), 10.f), 0.f),
+              std::max(-GetShadowOffsetY(handleBounds.MH(), 10.f), 0.f),
+              std::min(-GetShadowOffsetX(handleBounds.MW(), 10.f), 0.f),
+              std::min(-GetShadowOffsetY(handleBounds.MH(), 10.f), 0.f)
+            );
 
-      //    return handleBounds;
-      //  }
+          return handleBounds;
+        }
 
-      //  float GetRoundedCornerRadius(const IRECT& bounds) const
-      //  {
-      //    if (bounds.W() < bounds.H())
-      //      return mStyle.roundness * (bounds.W() / 2.f);
-      //    else
-      //      return mStyle.roundness * (bounds.H() / 2.f);
-      //  }
+        float GetRoundedCornerRadius(const IRECT& bounds) const
+        {
+          if (bounds.W() < bounds.H())
+            return mStyle.roundness * (bounds.W() / 2.f);
+          else
+            return mStyle.roundness * (bounds.H() / 2.f);
+        }
 
-      //  void DrawSplash(IGraphics& g)
-      //  {
-      //    float mouseDownX, mouseDownY;
-      //    g.GetMouseDownPoint(mouseDownX, mouseDownY);
-      //    g.FillCircle(GetColor(kHL), mouseDownX, mouseDownY, mSplashRadius);
-      //  }
+        void DrawSplash(IGraphics& g)
+        {
+          float mouseDownX, mouseDownY;
+          g.GetMouseDownPoint(mouseDownX, mouseDownY);
+          g.FillCircle(GetColor(kHL), mouseDownX, mouseDownY, mSplashRadius);
+        }
 
-      //  virtual void DrawBackGround(IGraphics& g, const IRECT& rect)
-      //  {
-      //    g.FillRect(GetColor(kBG), rect);
-      //  }
+        virtual void DrawBackGround(IGraphics& g, const IRECT& rect)
+        {
+          g.FillRect(GetColor(kBG), rect);
+        }
 
-      //  virtual void DrawWidget(IGraphics& g)
-      //  {
-      //    // no-op
-      //  }
+        virtual void DrawWidget(IGraphics& g)
+        {
+          // no-op
+        }
 
-      //  virtual void DrawLabel(IGraphics& g)
-      //  {
-      //    if (mLabelBounds.H() && mStyle.showLabel)
-      //      g.DrawText(mStyle.labelText, mLabelStr.Get(), mLabelBounds);
-      //  }
+        virtual void DrawLabel(IGraphics& g)
+        {
+          if (mLabelBounds.H() && mStyle.showLabel)
+            g.DrawText(mStyle.labelText, mLabelStr.Get(), mLabelBounds);
+        }
 
-      //  virtual void DrawValue(IGraphics& g, bool mouseOver)
-      //  {
-      //    if (mouseOver)
-      //      g.FillRect(COLOR_TRANSLUCENT, mValueBounds);
+        virtual void DrawValue(IGraphics& g, bool mouseOver)
+        {
+          if (mouseOver)
+            g.FillRect(COLOR_TRANSLUCENT, mValueBounds);
 
-      //    if (mStyle.showValue)
-      //      g.DrawText(mStyle.valueText, mValueStr.Get(), mValueBounds);
-      //  }
+          if (mStyle.showValue)
+            g.DrawText(mStyle.valueText, mValueStr.Get(), mValueBounds);
+        }
 
         void DrawHandle(IGraphics& g, EVShape shape, const IRECT& bounds, bool pressed, bool mouseOver)
         {
@@ -691,8 +697,8 @@ namespace SR {
             //outer shadow
             if (mStyle.drawShadows)
               g.FillRoundRect(GetColor(kSH), handleBounds.GetTranslated(
-                mRoomInfo.GetShadowOffsetX(handleBounds.L + handleBounds.W() * 0.5f, handleBounds.GetLengthOfShortestSide()),
-                mRoomInfo.GetShadowOffsetY(handleBounds.T + handleBounds.H() * 0.5f, handleBounds.GetLengthOfShortestSide())),
+                GetShadowOffsetX(handleBounds.L + handleBounds.W() * 0.5f, handleBounds.GetLengthOfShortestSide()),
+                GetShadowOffsetY(handleBounds.T + handleBounds.H() * 0.5f, handleBounds.GetLengthOfShortestSide())),
                 topLeftR, topRightR, bottomLeftR, bottomRightR);
 
             g.FillRoundRect(GetColor(kFG), handleBounds, topLeftR, topRightR, bottomLeftR, bottomRightR);
@@ -843,21 +849,21 @@ namespace SR {
         }
 
       protected:
-      //  IControl* mControl = nullptr;
-      //  WDL_TypedBuf<IColor> mColors;
-      //  IVStyle mStyle;
-      //  bool mLabelInWidget = false;
-      //  bool mValueInWidget = false;
-      //  float mSplashRadius = 0.f;
-      //  float mMaxSplashRadius = 50.f;
-      //  IRECT mWidgetBounds; // The knob/slider/button
-      //  IRECT mLabelBounds; // A piece of text above the control
-      //  IRECT mValueBounds; // Text below the contol, usually displaying the value of a parameter
-      //  WDL_String mLabelStr;
-      //  WDL_String mValueStr;
+        //  IControl* mControl = nullptr;
+        //  WDL_TypedBuf<IColor> mColors;
+        //  IVStyle mStyle;
+        //  bool mLabelInWidget = false;
+        //  bool mValueInWidget = false;
+        //  float mSplashRadius = 0.f;
+        //  float mMaxSplashRadius = 50.f;
+        //  IRECT mWidgetBounds; // The knob/slider/button
+        //  IRECT mLabelBounds; // A piece of text above the control
+        //  IRECT mValueBounds; // Text below the contol, usually displaying the value of a parameter
+        //  WDL_String mLabelStr;
+        //  WDL_String mValueStr;
 
-      //  // Hannes:
-        SRRoomInfo mRoomInfo;
+        //  // Hannes:
+          //SRRoomInfo mRoomInfo;
       };
 
 
@@ -1032,8 +1038,8 @@ namespace SR {
           : (mWidgetBounds.W() / 2.f) * 0.8f;
         const float cx = mWidgetBounds.MW(), cy = mWidgetBounds.MH();
         const IRECT knobRect = { cx - radius, cy - radius, cx + radius, cy + radius };
-        const float shadowOffsetX = mRoomInfo.GetShadowOffsetX(cx, radius);
-        const float shadowOffsetY = mRoomInfo.GetShadowOffsetY(cy, radius);
+        const float shadowOffsetX = GetShadowOffsetX(cx, radius);
+        const float shadowOffsetY = GetShadowOffsetY(cy, radius);
         const float frameThickness = radius * 0.1 * mStyle.frameThickness;
 
 
@@ -1058,10 +1064,10 @@ namespace SR {
             g.FillEllipse(
               GetColor(kSH),
               knobRect.GetPadded(
-              (shadowOffsetX < 0.f) ? -shadowOffsetX : 0.f,
-                (shadowOffsetY < 0.f) ? -shadowOffsetY : 0.f,
-                (shadowOffsetX > 0.f) ? shadowOffsetX : 0.f,
-                (shadowOffsetY > 0.f) ? shadowOffsetY : 0.f
+                std::min(-shadowOffsetX, 0.f),
+                std::min(-shadowOffsetY, 0.f),
+                std::max(shadowOffsetX, 0.f),
+                std::max(shadowOffsetY, 0.f)
               )
             );
 
