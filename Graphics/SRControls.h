@@ -1048,6 +1048,7 @@ namespace SR {
           /*TODO: constants! */
           const float v = mAngleMin + ((float)GetValue() * (mAngleMax - mAngleMin));
 
+
           // FRAME
           if (mStyle.drawFrame) {
             g.DrawCircle((!mMouseDown) ? GetColor(kFR) : GetColor(kX1), cx, cy, radius, 0, frameThickness);
@@ -1101,9 +1102,6 @@ namespace SR {
           // MOUSEOVER
           if (mMouseIsOver & !mValueMouseOver)
             g.FillCircle(GetColor(kHL), cx, cy, radius);
-
-
-
 
 
         }
