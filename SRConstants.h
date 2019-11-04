@@ -11,6 +11,8 @@
 //  plug->GetParam(paramIdx)->InitDouble(name, defaultVal, minVal, maxVal, step, label, flags, group, new IParam::ShapePowCurve(SetShapeCentered(minVal, maxVal, centerVal, centerPoint)), unit, displayFunc);
 //}
 
+using namespace iplug;
+using namespace igraphics;
 
   /** custom parameter shaping from middle position */
 struct ShapeFromMiddle : public IParam::Shape
