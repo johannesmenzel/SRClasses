@@ -1,5 +1,4 @@
 #pragma once
-#include "IPlug_include_in_plug_hdr.h"
 
 // PLUG ELEMENTS
 // -------------

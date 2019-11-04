@@ -1043,7 +1043,7 @@ namespace SR {
         const float frameThickness = radius * 0.1 * mStyle.frameThickness;
 
 
-        if (!IsGrayed())
+        if (!IsDisabled())
         {
           /*TODO: constants! */
           const float v = mAngleMin + ((float)GetValue() * (mAngleMax - mAngleMin));
@@ -2371,7 +2371,7 @@ namespace SR {
           mNamedParams = pNamedParams;
         }
         void Draw(IGraphics& g) override {
-          auto* pPluginBase = static_cast<::IPluginBase*>(GetDelegate());
+          auto* pPluginBase = static_cast<iplug::IPluginBase*>(GetDelegate());
           int pNumber = pPluginBase->GetCurrentPresetIdx();
 
           mDisp.SetFormatted(32, "%02d: %s", pNumber + 1, pPluginBase->GetPresetName(pNumber));
@@ -2387,7 +2387,7 @@ namespace SR {
           }
         }
         void OnMouseDown(float x, float y, const IMouseMod& mod) override {
-          auto* pPluginBase = static_cast<::IPluginBase*>(GetDelegate());
+          auto* pPluginBase = static_cast<iplug::IPluginBase*>(GetDelegate());
           if (mod.R) {
             const char* pname = pPluginBase->GetPresetName(pPluginBase->GetCurrentPresetIdx());
             GetUI()->CreateTextEntry(*this, mText, mRECT, pname);
@@ -2399,7 +2399,7 @@ namespace SR {
           SetDirty();
         }
         void doPopupMenu(IGraphics& g) {
-          auto* pPluginBase = static_cast<::IPluginBase*>(GetDelegate());
+          auto* pPluginBase = static_cast<iplug::IPluginBase*>(GetDelegate());
 
           const int numPresets = pPluginBase->NPresets();
           IPopupMenu menuMain;
@@ -2436,7 +2436,7 @@ namespace SR {
           }
         }
         void TextFromTextEntry(const char* txt) {
-          auto* pPluginBase = static_cast<::IPluginBase*>(GetDelegate());
+          auto* pPluginBase = static_cast<iplug::IPluginBase*>(GetDelegate());
           WDL_String safeName;
           safeName.Set(txt, MAX_PRESET_NAME_LEN);
 
