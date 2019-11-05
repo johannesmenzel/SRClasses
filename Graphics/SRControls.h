@@ -1041,6 +1041,7 @@ namespace SR {
         const float shadowOffsetX = GetShadowOffsetX(cx, radius);
         const float shadowOffsetY = GetShadowOffsetY(cy, radius);
         const float frameThickness = radius * 0.1 * mStyle.frameThickness;
+        const float arrowThickness = frameThickness * 0.5f;
 
 
         if (!IsDisabled())
@@ -1051,7 +1052,21 @@ namespace SR {
 
           // FRAME
           if (mStyle.drawFrame) {
+
+            // FRAME SHADOW
+            if (mStyle.drawShadows)
+              g.FillEllipse(
+                GetColor(kSH),
+                knobRect.GetPadded(0.5f * frameThickness).GetPadded(
+                  std::max(-shadowOffsetX, 0.f),
+                  std::max(-shadowOffsetY, 0.f),
+                  std::max(shadowOffsetX, 0.f),
+                  std::max(shadowOffsetY, 0.f)
+                )
+              );
+
             g.DrawCircle((!mMouseDown) ? GetColor(kFR) : GetColor(kX1), cx, cy, radius, 0, frameThickness);
+
           }
 
           // ARC
@@ -1061,14 +1076,13 @@ namespace SR {
 
           // SHADOW
           if (mStyle.drawShadows)
-            //g.FillCircle(GetColor(kSH), cx + mRoomInfo.GetShadowOffsetX(cx, radius * 0.1f), cy + mRoomInfo.GetShadowOffsetY(cy, radius * 0.1f), radius);
             g.FillEllipse(
               GetColor(kSH),
               knobRect.GetPadded(
-                std::min(-shadowOffsetX, 0.f),
-                std::min(-shadowOffsetY, 0.f),
-                std::max(shadowOffsetX, 0.f),
-                std::max(shadowOffsetY, 0.f)
+                std::max(-shadowOffsetX * 0.3f, 0.f),
+                std::max(-shadowOffsetY * 0.3f, 0.f),
+                std::max(shadowOffsetX * 0.3f, 0.f),
+                std::max(shadowOffsetY * 0.3f, 0.f)
               )
             );
 
@@ -1080,8 +1094,8 @@ namespace SR {
 
           // ARROW
           if (mStyle.drawShadows)
-            g.DrawRadialLine(GetColor(kSH), cx + shadowOffsetX * 0.1f, cy + shadowOffsetY * 0.1f, v, 0.0f, radius, 0, frameThickness >= 1.f ? frameThickness : 1.f);
-          g.DrawRadialLine(GetColor(kFR), cx, cy, v, 0.0f, radius, 0, frameThickness >= 1.f ? frameThickness : 1.f);
+            g.DrawRadialLine(GetColor(kSH), cx + shadowOffsetX * 0.1f, cy + shadowOffsetY * 0.1f, v, 0.0f, radius, 0, arrowThickness >= 1.f ? arrowThickness : 1.f);
+          g.DrawRadialLine(GetColor(kFR), cx, cy, v, 0.0f, radius, 0, arrowThickness >= 1.f ? arrowThickness : 1.f);
 
 
           // LIGHTPATTERN, Should be optimized
