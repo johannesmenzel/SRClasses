@@ -16,8 +16,96 @@ namespace SR {
   namespace Graphics {
     namespace Layout {
 
+      // SRPLUGIN CONSTANTS
+
+      // Colors
+      const IColor SR_DEFAULT_COLOR = COLOR_LIGHT_GRAY; // oder COLOR_MID_GRAY?
+      const IColor SR_DEFAULT_COLOR_BG = COLOR_TRANSPARENT;
+      const IColor SR_DEFAULT_COLOR_FG = SR_DEFAULT_COLOR;
+      const IColor SR_DEFAULT_COLOR_PR = IColor(255, 234, 158, 19);
+      const IColor SR_DEFAULT_COLOR_FR = IColor(255, 150, 150, 150);
+      const IColor SR_DEFAULT_COLOR_HL = IColor(30, 255, 255, 255);
+      const IColor SR_DEFAULT_COLOR_SH = IColor(100, 0, 0, 0);
+      const IColor SR_DEFAULT_COLOR_X1 = IColor(255, 234, 158, 19);
+      const IColor SR_DEFAULT_COLOR_X2 = IColor(255, 48, 166, 186);
+      const IColor SR_DEFAULT_COLOR_X3 = IColor(255, 249, 206, 34);
+
+      const IColor SR_DEFAULT_COLOR_CUSTOM_PLUGIN_BG = IColor(255, 12, 17, 23);
+      const IColor SR_DEFAULT_COLOR_CUSTOM_PANEL_BG = IColor(255, 50, 75, 95);
+      const IColor SR_DEFAULT_COLOR_CUSTOM_BLUE = IColor(255, 62, 100, 121);
+      const IColor SR_DEFAULT_COLOR_CUSTOM_RED = IColor(255, 131, 18, 18);
+      const IColor SR_DEFAULT_COLOR_CUSTOM_GREEN = IColor(255, 103, 141, 52);
+      const IColor SR_DEFAULT_COLOR_CUSTOM_ORANGE = IColor(255, 234, 158, 19);
+      const IColor SR_DEFAULT_COLOR_CUSTOM_YELLOW = IColor(255, 219, 181, 30);
+      const IColor SR_DEFAULT_COLOR_CUSTOM_BLACK = IColor(255, 23, 23, 23);
+      const IColor SR_DEFAULT_COLOR_CUSTOM_WHITE = IColor(255, 243, 243, 243);
+
+      // Texts
+      const float SR_DEFAULT_TEXT_SIZE = 20.f;
+
+      const IText SR_DEFAULT_TEXT = IText(20.f, SR_DEFAULT_COLOR, nullptr, EAlign::Center, EVAlign::Top);
+      const IText SR_DEFAULT_TEXT_KNOB_LABEL = IText(24.f, SR_DEFAULT_COLOR, nullptr, EAlign::Center, EVAlign::Top);
+      const IText SR_DEFAULT_TEXT_KNOB_VALUE = IText(20.f, COLOR_MID_GRAY, nullptr, EAlign::Center, EVAlign::Bottom);
+      const IText SR_DEFAULT_TEXT_BUTTON_LABEL = IText(16.f, SR_DEFAULT_COLOR, nullptr, EAlign::Center, EVAlign::Bottom);
+      const IText SR_DEFAULT_TEXT_BUTTON_VALUE = IText(12.f, COLOR_MID_GRAY, nullptr, EAlign::Center, EVAlign::Bottom);;
+      const IText SR_DEFAULT_TEXT_VERSIONSTRING = IText(14.f, SR_DEFAULT_COLOR, nullptr, EAlign::Near, EVAlign::Middle);
+      const IText SR_DEFAULT_TEXT_PRESETMENU = IText(30.f, SR_DEFAULT_COLOR, nullptr, EAlign::Center, EVAlign::Middle);
+
+      // Color Specs
+      const IVColorSpec SR_DEFAULT_COLOR_SPEC = IVColorSpec(
+        { SR_DEFAULT_COLOR_BG
+        , SR_DEFAULT_COLOR_FG
+        , SR_DEFAULT_COLOR_PR
+        , SR_DEFAULT_COLOR_FR
+        , SR_DEFAULT_COLOR_HL
+        , SR_DEFAULT_COLOR_SH
+        , SR_DEFAULT_COLOR_X1
+        , SR_DEFAULT_COLOR_X2
+        , SR_DEFAULT_COLOR_X3
+        }
+      );
+
+      // Styles
+      const IVStyle SR_DEFAULT_STYLE = IVStyle(
+        true,
+        true,
+        { SR_DEFAULT_COLOR_BG
+        , SR_DEFAULT_COLOR_FG
+        , SR_DEFAULT_COLOR_PR
+        , SR_DEFAULT_COLOR_FR
+        , SR_DEFAULT_COLOR_HL
+        , SR_DEFAULT_COLOR_SH
+        , SR_DEFAULT_COLOR_X1
+        , SR_DEFAULT_COLOR_X2
+        , SR_DEFAULT_COLOR_X3
+        },
+        SR_DEFAULT_TEXT_KNOB_LABEL,
+        SR_DEFAULT_TEXT_KNOB_VALUE,
+        true,
+        true,
+        true,
+        true,
+        0.1f, // roundness
+        2.f, // frame-thick, def: 1.f
+        3.f, // shadow-off
+        DEFAULT_WIDGET_FRAC,
+        DEFAULT_WIDGET_ANGLE
+      );
+      const IVStyle SR_DEFAULT_STYLE_KNOB = SR_DEFAULT_STYLE;
+      const IVStyle SR_DEFAULT_STYLE_BUTTON = SR_DEFAULT_STYLE
+        /*.WithShowLabel(false)*/
+        .WithColor(EVColor::kFG, IColor(255, 30, 50, 70))
+        /*.WithDrawShadows(false)*/
+        .WithWidgetFrac(0.8f);
+      const IVStyle SR_DEFAULT_STYLE_FADER = SR_DEFAULT_STYLE.WithColor(EVColor::kFG, IColor(255, 30, 50, 70)).WithDrawFrame(false);
+      const IVStyle SR_DEFAULT_STYLE_METER = SR_DEFAULT_STYLE_FADER;
+      const IVStyle SR_DEFAULT_STYLE_GRAPH = SR_DEFAULT_STYLE_FADER;
+
+      // END SRPLUGIN CONSTANTS
+
       class SRCustomStyles {
       public:
+
         enum ECustomStyles {
           kDefault = 0,
           kKnob,
@@ -50,7 +138,7 @@ namespace SR {
       class SRCustomColors {
       public:
         enum ECustomColors {
-          kDefault = 0,
+          kDefault = 0,     
           kPluginBg,
           kPanelBg,
           kBlue,
@@ -435,128 +523,13 @@ namespace SR {
         , public SRRoomInfo
       {
       public:
-        SRVectorBase(const IColor* pBGColor = &DEFAULT_BGCOLOR,
-          const IColor* pFGColor = &DEFAULT_FGCOLOR,
-          const IColor* pPRColor = &DEFAULT_PRCOLOR,
-          const IColor* pFRColor = &DEFAULT_FRCOLOR,
-          const IColor* pHLColor = &DEFAULT_HLCOLOR,
-          const IColor* pSHColor = &DEFAULT_SHCOLOR,
-          const IColor* pX1Color = &DEFAULT_X1COLOR,
-          const IColor* pX2Color = &DEFAULT_X2COLOR,
-          const IColor* pX3Color = &DEFAULT_X3COLOR)
-          : IVectorBase(pBGColor, pFGColor, pPRColor, pFRColor, pHLColor, pSHColor, pX1Color, pX2Color, pX3Color)
-        {
-          AddColors(pBGColor, pFGColor, pPRColor, pFRColor, pHLColor, pSHColor, pX1Color, pX2Color, pX3Color);
-        }
 
-        SRVectorBase(const IVStyle& style, bool labelInWidget = false, bool valueInWidget = false, SRRoomInfo roomInfo = SR_DEFAULT_ROOMINFO)
+        SRVectorBase(const IVStyle& style = DEFAULT_STYLE, bool labelInWidget = false, bool valueInWidget = false, SRRoomInfo roomInfo = SR_DEFAULT_ROOMINFO)
           : IVectorBase(style, labelInWidget, valueInWidget)
           , SRRoomInfo(roomInfo)
         {
           SetStyle(style);
         }
-
-        //void AttachIControl(IControl* pControl, const char* label)
-        //{
-        //  mControl = pControl;
-        //  mLabelStr.Set(label);
-        //}
-
-        //void AddColor(const IColor& color)
-        //{
-        //  mColors.Add(color);
-        //}
-
-        //void AddColors(const IColor* pBGColor = 0,
-        //  const IColor* pFGColor = 0,
-        //  const IColor* pPRColor = 0,
-        //  const IColor* pFRColor = 0,
-        //  const IColor* pHLColor = 0,
-        //  const IColor* pSHColor = 0,
-        //  const IColor* pX1Color = 0,
-        //  const IColor* pX2Color = 0,
-        //  const IColor* pX3Color = 0)
-        //{
-        //  if (pBGColor) AddColor(*pBGColor);
-        //  if (pFGColor) AddColor(*pFGColor);
-        //  if (pPRColor) AddColor(*pPRColor);
-        //  if (pFRColor) AddColor(*pFRColor);
-        //  if (pHLColor) AddColor(*pHLColor);
-        //  if (pSHColor) AddColor(*pSHColor);
-        //  if (pX1Color) AddColor(*pX1Color);
-        //  if (pX2Color) AddColor(*pX2Color);
-        //  if (pX3Color) AddColor(*pX3Color);
-        //}
-
-        //void SetColor(int colorIdx, const IColor& color)
-        //{
-        //  if (colorIdx < mColors.GetSize())
-        //    mColors.Get()[colorIdx] = color;
-
-        //  mControl->SetDirty(false);
-        //}
-
-        //void SetColors(const IColor& BGColor,
-        //  const IColor& FGColor,
-        //  const IColor& PRColor,
-        //  const IColor& FRColor,
-        //  const IColor& HLColor,
-        //  const IColor& SHColor,
-        //  const IColor& X1Color,
-        //  const IColor& X2Color,
-        //  const IColor& X3Color)
-        //{
-        //  mColors.Get()[kBG] = BGColor;
-        //  mColors.Get()[kFG] = FGColor;
-        //  mColors.Get()[kPR] = PRColor;
-        //  mColors.Get()[kFR] = FRColor;
-        //  mColors.Get()[kHL] = HLColor;
-        //  mColors.Get()[kSH] = SHColor;
-        //  mColors.Get()[kX1] = X1Color;
-        //  mColors.Get()[kX2] = X2Color;
-        //  mColors.Get()[kX3] = X3Color;
-        //}
-
-        //void SetColors(const IVColorSpec& spec)
-        //{
-        //  SetColors(spec.GetColor(kBG),
-        //    spec.GetColor(kFG),
-        //    spec.GetColor(kPR),
-        //    spec.GetColor(kFR),
-        //    spec.GetColor(kHL),
-        //    spec.GetColor(kSH),
-        //    spec.GetColor(kX1),
-        //    spec.GetColor(kX2),
-        //    spec.GetColor(kX3));
-        //}
-
-        //const IColor& GetColor(int colorIdx) const
-        //{
-        //  if (colorIdx < mColors.GetSize())
-        //    return mColors.Get()[colorIdx];
-        //  else
-        //    return mColors.Get()[0];
-        //}
-
-        //void SetLabelStr(const char* label) { mLabelStr.Set(label); mControl->SetDirty(false); }
-        //void SetValueStr(const char* value) { mValueStr.Set(value); mControl->SetDirty(false); }
-        //void SetWidgetFrac(float frac) { mStyle.widgetFrac = Clip(frac, 0.f, 1.f);  mControl->OnResize(); mControl->SetDirty(false); }
-        //void SetAngle(float angle) { mStyle.angle = Clip(angle, 0.f, 360.f);  mControl->SetDirty(false); }
-        //void SetShowLabel(bool show) { mStyle.showLabel = show;  mControl->OnResize(); mControl->SetDirty(false); }
-        //void SetShowValue(bool show) { mStyle.showValue = show;  mControl->OnResize(); mControl->SetDirty(false); }
-        //void SetRoundness(float roundness) { mStyle.roundness = Clip(roundness, 0.f, 1.f); mControl->SetDirty(false); }
-        //void SetDrawFrame(bool draw) { mStyle.drawFrame = draw; mControl->SetDirty(false); }
-        //void SetDrawShadows(bool draw) { mStyle.drawShadows = draw; mControl->SetDirty(false); }
-        //void SetShadowOffset(float offset) { mStyle.shadowOffset = offset; mControl->SetDirty(false); }
-        //void SetFrameThickness(float thickness) { mStyle.frameThickness = thickness; mControl->SetDirty(false); }
-        //void SetSplashRadius(float radius) { mSplashRadius = radius * mMaxSplashRadius; }
-
-        //void SetStyle(const IVStyle& style)
-        //{
-        //  mStyle = style;
-        //  mColors.Resize(kNumDefaultVColors); // TODO?
-        //  SetColors(style.colorSpec);
-        //}
 
         IRECT GetAdjustedHandleBounds(IRECT handleBounds) const
         {
@@ -947,6 +920,9 @@ namespace SR {
       // --------------------------------------------------------------------------------
 
       /** A vector knob control drawn using graphics primitves */
+
+
+
       class SRVectorKnob
         : public IKnobControlBase
         , public Base::SRVectorBase
@@ -995,7 +971,9 @@ namespace SR {
       };
 
 
-      SRVectorKnob::SRVectorKnob(const IRECT& bounds, int paramIdx, const char* label, const IVStyle& style, Base::SRRoomInfo& lightInfo, const IColor& uniqueColor, bool valueIsEditable, bool valueInWidget, float aMin, float aMax, float aAnchor, EDirection direction, double gearing)
+      SRVectorKnob::SRVectorKnob(const IRECT& bounds, int paramIdx, const char* label, const IVStyle& style, Base::SRRoomInfo& lightInfo,
+        const IColor& uniqueColor, bool valueIsEditable, bool valueInWidget, float aMin, float aMax, float aAnchor, EDirection direction,
+        double gearing)
         : IKnobControlBase(bounds, paramIdx, direction, gearing)
         , SRVectorBase(style, false, valueInWidget, lightInfo)
         , mAngleMin(aMin)
@@ -1046,7 +1024,7 @@ namespace SR {
 
         if (!IsDisabled())
         {
-          /*TODO: constants! */
+          // TODO: constants! 
           const float v = mAngleMin + ((float)GetValue() * (mAngleMax - mAngleMin));
 
 
@@ -1215,463 +1193,6 @@ namespace SR {
       }
 
 
-
-
-
-
-      /*
-
-          class SRVectorKnobText
-            : public IKnobControlBase
-            , public IVectorBase
-          {
-          public:
-            SRVectorKnobText(IRECT bounds, int paramIdx,
-              const char* label = "", const char* minLabel = "", const char* maxLabel = "", const char* ctrLabel = "", bool drawCircleLabels = false, bool displayParamValue = false,
-              const IVStyle& style = DEFAULT_STYLE, const IColor& color = DEFAULT_FGCOLOR,
-              const IText& labelText = IText(DEFAULT_TEXT_SIZE + 5, EVAlign::Top), const IText& valueText = IText(DEFAULT_TEXT_SIZE, EVAlign::Bottom),
-              float aMin = -135.f, float aMax = 135.f, float knobFrac = 0.50f,
-              EDirection direction = EDirection::Vertical, double gearing = DEFAULT_GEARING)
-              : IKnobControlBase(bounds, paramIdx, direction, gearing)
-              , IVectorBase(style, true, displayParamValue)
-              , mAngleMin(aMin)
-              , mAngleMax(aMax)
-              , mAngleDefault(aMin + 0.5f * (aMax - aMin))
-              , mLabel(label)
-              , mLabelMin(minLabel)
-              , mLabelMax(maxLabel)
-              , mLabelCtr(ctrLabel)
-              , mDrawCircleLabels(drawCircleLabels)
-              , mDisplayParamValue(displayParamValue)
-              , mLabelText(labelText)
-              , mKnobFrac(knobFrac)
-              , mColor(color)
-              , mTextCircleLabelMin(10.f, COLOR_LIGHT_GRAY, nullptr, EAlign::Far)
-              , mTextCircleLabelMax(10.f, COLOR_LIGHT_GRAY, nullptr, EAlign::Near)
-              , mTextCircleLabelCtr(10.f, COLOR_LIGHT_GRAY, nullptr, EAlign::Center)
-              , mPatternShadow(IPattern(EPatternType::Solid))
-              , mPatternHead(IPattern(EPatternType::Radial))
-              , mPatternHeadLights(IPattern(EPatternType::Radial))
-              , mPatternRim(IPattern(EPatternType::Linear))
-              , mPatternEdge(IPattern(EPatternType::Linear))
-              , mShadowFrame(mPatternShadow, 1.f, style.shadowOffset, style.shadowOffset, 0.5f, true)
-              , mShadowHead(mPatternShadow, 1.f, style.shadowOffset, style.shadowOffset, 0.5f, true)
-              , mShadowArrow(mPatternShadow, 1.f, style.shadowOffset, style.shadowOffset, 0.5f, true)
-
-            {
-              if (mDisplayParamValue)
-                DisablePrompt(false);
-              mValueText = valueText;
-              mStrokeOptions.mPreserve = true;
-              mFillOptions.mPreserve = true;
-              AttachIControl(this, label);
-            }
-
-            virtual ~SRVectorKnobText() {}
-
-            void Draw(IGraphics& g) override {
-              // These values have to be calculated if value changed
-              const float mAngleValue = mAngleMin + ((float)GetValue() * (mAngleMax - mAngleMin));
-              const float colorIntensity = fabsf((float)GetValue() - (float)GetParam()->GetDefault(true) / fmaxf((float)GetParam()->GetDefault(true), (1.f - (float)GetParam()->GetDefault(true))));
-              IColor arcColor;
-              IColor::LinearInterpolateBetween(GetColor(kBG), mColor, arcColor, 0.3f + 0.5f * colorIntensity);
-
-              // Background
-              //g.FillRect(GetColor(kBG), mRECT);
-
-              // Value Arc
-              if (mAngleValue <= mAngleDefault)
-                g.DrawArc(arcColor, mCenterX, mCenterY, knobScales.valArc.relRadius * mRadius, mAngleValue, mAngleDefault, 0, knobScales.valArc.relThickness * mRelThickness);
-              else
-                g.DrawArc(arcColor, mCenterX, mCenterY, knobScales.valArc.relRadius * mRadius, mAngleDefault, mAngleValue, 0, knobScales.valArc.relThickness * mRelThickness);
-
-              // Dots
-              for (int i = 0; i <= 10; i++) {
-                g.DrawRadialLine(COLOR_MID_GRAY, mCenterX, mCenterY, mAngleMin + (float(i) * 0.1f) * (mAngleMax - mAngleMin), mRadius, mRadius + knobScales.dots.relThickness * mRelThickness, 0, knobScales.dots.relThickness * mRelThickness);
-              }
-
-              // Draw Circle Labels
-              if (mDrawCircleLabels) {
-                if (mMinLabelBounds.H()) {
-                  g.DrawText(mTextCircleLabelMin, mLabelMin.Get(), mMinLabelBounds, 0);
-                }
-                if (mMaxLabelBounds.H()) {
-                  g.DrawText(mTextCircleLabelMax, mLabelMax.Get(), mMaxLabelBounds, 0);
-                }
-                if (mCtrLabelBounds.H()) {
-                  g.DrawText(mTextCircleLabelCtr, mLabelCtr.Get(), mCtrLabelBounds, 0);
-                }
-              }
-
-              // Text Label
-              if (mLabelBounds.H()) {
-                if (!mMouseIsOver && !mGrayed)
-                  g.DrawText(mLabelText, mLabel.Get(), mLabelBounds);
-                else {
-                  // Text Value
-                  if (mDisplayParamValue)
-                  {
-                    WDL_String str;
-                    GetParam()->GetDisplayForHost(str);
-
-                    if (mShowParamLabel)
-                    {
-                      str.Append(" ");
-                      str.Append(GetParam()->GetLabelForHost());
-                    }
-
-                    //g.FillRoundRect(GetColor(kFR), mValueBounds, 2.f, 0);
-                    g.DrawText(mValueText, str.Get(), mValueBounds);
-                  }
-                }
-              }
-
-              g.StartLayer(mRECT);
-              // Draw Frame
-              //g.DrawCircle(GetColor(kFR), mCenterX, mCenterY, mRadius * 0.9f, 0, mRelThickness);
-
-              // Draw Rim
-              g.PathClear();
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.outerRim.relRadius, mAngleValue + 7.f, mAngleValue + 53.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.rim.relRadius, mAngleValue + 55.f, mAngleValue + 65.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.outerRim.relRadius, mAngleValue + 67.f, mAngleValue + 113.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.rim.relRadius, mAngleValue + 115.f, mAngleValue + 125.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.outerRim.relRadius, mAngleValue + 127.f, mAngleValue + 173.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.rim.relRadius, mAngleValue + 175.f, mAngleValue + 185.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.outerRim.relRadius, mAngleValue + 187.f, mAngleValue + 233.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.rim.relRadius, mAngleValue + 235.f, mAngleValue + 245.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.outerRim.relRadius, mAngleValue + 247.f, mAngleValue + 293.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.rim.relRadius, mAngleValue + 295.f, mAngleValue + 305.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.outerRim.relRadius, mAngleValue + 307.f, mAngleValue + 353.f);
-              g.PathArc(mCenterX, mCenterY, mRadius * knobScales.rim.relRadius, mAngleValue + 355.f, mAngleValue + 5.f);
-              g.PathClose();
-              //g.PathStroke(mPatternEdge, knobScales.outerRim.relThickness * mRadius, strokeOptions);
-              g.PathFill(mPatternRim);
-              mLayer = g.EndLayer();
-              if (!Getstyle && !mGrayed) g.ApplyLayerDropShadow(mLayer, mShadowFrame);
-              g.DrawLayer(mLayer);
-
-              // Draw Head
-              g.StartLayer(mRECT);
-              g.PathClear();
-              g.PathCircle(mCenterX, mCenterY, mRadius * knobScales.head.relRadius);
-              if (!mGrayed) g.PathFill(mPatternHead, mFillOptions);
-              else g.PathFill(COLOR_GRAY, mFillOptions);
-              mLayer = g.EndLayer();
-              if (!mEmboss && !mGrayed) g.ApplyLayerDropShadow(mLayer, mShadowHead);
-              g.DrawLayer(mLayer);
-
-              if (!mEmboss && !mGrayed) {
-                g.PathClear();
-                g.PathCircle(mCenterX, mCenterY, mRadius * knobScales.head.relRadius);
-                g.PathFill(mPatternHeadLights, mFillOptions);
-              }
-
-
-              // Head Lights
-              if (!mEmboss && !mGrayed) {
-                g.PathClear();
-                g.PathCircle(mCenterX, mCenterY, mRadius * knobScales.head.relRadius - 0.5f * knobScales.head.relThickness * mRadius);
-                g.PathStroke(mPatternEdge, mRadius * knobScales.head.relThickness, mStrokeOptions);
-              }
-
-              // Outer Arrow
-              g.DrawRadialLine(GetColor(kFR), mCenterX, mCenterY, mAngleValue, knobScales.outerArrow.relInnerRadius * mRadius, mRadius * knobScales.outerArrow.relRadius, 0, knobScales.outerArrow.relThickness * mRelThickness);
-
-              // Arrow
-              g.StartLayer(mRECT);
-              if (mColor.B + mColor.R + mColor.G > 600) {
-                g.DrawRadialLine(GetColor(kFR), mCenterX, mCenterY, mAngleValue, knobScales.arrow.relInnerRadius, knobScales.arrow.relRadius * mRadius, 0, knobScales.arrow.relThickness * mRelThickness);
-                g.FillCircle(GetColor(kFR), mCenterX, mCenterY, knobScales.arrow.relThickness * mRelThickness * 0.5f, 0);
-              }
-              else {
-                g.DrawRadialLine(GetColor(kON), mCenterX, mCenterY, mAngleValue, knobScales.arrow.relInnerRadius, knobScales.arrow.relRadius * mRadius, 0, knobScales.arrow.relThickness * mRelThickness);
-                g.FillCircle(GetColor(kON), mCenterX, mCenterY, knobScales.arrow.relThickness * mRelThickness * 0.5f, 0);
-              }
-              mLayer = g.EndLayer();
-              if (!mEmboss && !mGrayed) g.ApplyLayerDropShadow(mLayer, mShadowArrow);
-              g.DrawLayer(mLayer);
-
-
-              // Mouseover
-              if (mMouseIsOver && !mGrayed) g.FillCircle(GetColor(kHL), mCenterX, mCenterY, mRadius * knobScales.head.relRadius);
-
-            }
-            void OnMouseDown(float x, float y, const IMouseMod& mod) override {
-              if (mDisplayParamValue && mValueBounds.Contains(x, y))
-              {
-                PromptUserInput(mValueBounds);
-              }
-              else {
-                IKnobControlBase::OnMouseDown(x, y, mod);
-              }
-            }
-            void OnInit() override
-            {
-              mAngleDefault = mAngleMin + (float)GetParam()->GetDefault(true) * (mAngleMax - mAngleMin);
-            }
-            void OnResize() override {
-
-              mTargetRECT = mHandleBounds = mRECT;
-              mTextCircleLabelMin.mSize = mTextCircleLabelMax.mSize = mTextCircleLabelCtr.mSize = int(mRECT.H() * 0.18f);
-              mLabelText.mSize = mValueText.mSize = int(mRECT.H() * 0.22f);
-
-
-              // LABEL
-              if (mLabel.GetLength())
-              {
-                IRECT textRect;
-                GetUI()->MeasureText(mLabelText, mLabel.Get(), textRect);
-                const float labelDisplayWidth = mTargetRECT.W() * mKnobFrac * 0.5f;
-                switch (mLabelText.mVAlign)
-                {
-                case EVAlign::Top:
-                  mLabelBounds = mTargetRECT.GetFromTop(textRect.H()).GetMidHPadded(labelDisplayWidth);
-                  mHandleBounds = mHandleBounds.GetReducedFromTop(textRect.H());
-                  break;
-                case EVAlign::Middle:
-                  mLabelBounds = mTargetRECT.GetMidVPadded(textRect.H() / 2.f).GetMidHPadded(labelDisplayWidth);
-                  break;
-                case EVAlign::Bottom:
-                  mLabelBounds = mTargetRECT.GetFromBottom(textRect.H()).GetMidHPadded(labelDisplayWidth);
-                  mHandleBounds = mHandleBounds.GetReducedFromBottom(textRect.H());
-                  break;
-                default:
-                  break;
-                }
-                if (mLabelBounds.W() < textRect.W()) mLabelBounds = mLabelBounds.GetMidHPadded(mTargetRECT.W() / 2.f);
-              }
-              else {
-                mLabelBounds = IRECT();
-              }
-
-              // DISPLAY VALUE
-              if (mDisplayParamValue)
-              {
-                IRECT textRect;
-                WDL_String str;
-                GetParam()->GetDisplayForHost(str);
-
-                GetUI()->MeasureText(mValueText, str.Get(), textRect);
-
-                const float valueDisplayWidth = mTargetRECT.W() * mKnobFrac * 0.5f;
-
-                switch (mValueText.mVAlign) {
-                case EVAlign::Top:
-                  mValueBounds = mTargetRECT.GetFromTop(textRect.H()).GetMidHPadded(valueDisplayWidth);
-                  if (mLabelText.mVAlign != EVAlign::Top)
-                    mHandleBounds = mHandleBounds.GetReducedFromTop(textRect.H());
-                  break;
-                case EVAlign::Middle:
-                  mValueBounds = mTargetRECT.GetMidVPadded(textRect.H() / 2.f).GetMidHPadded(valueDisplayWidth);
-                  break;
-                case EVAlign::Bottom:
-                  mValueBounds = mTargetRECT.GetFromBottom(textRect.H()).GetMidHPadded(valueDisplayWidth);
-                  if (mLabelText.mVAlign != EVAlign::Bottom)
-                    mHandleBounds = mHandleBounds.GetReducedFromBottom(textRect.H());
-                  break;
-                default:
-                  break;
-                }
-
-                if (mValueBounds.W() < textRect.W()) mValueBounds = mValueBounds.GetMidHPadded(mTargetRECT.W() / 2.f);
-              }
-              else {
-                mValueBounds = IRECT();
-              }
-
-              // CIRCLE LABELS
-              if (mDrawCircleLabels) {
-                mHandleBounds = mHandleBounds.GetReducedFromTop((float)mTextCircleLabelCtr.mSize);
-              }
-
-              mHandleBounds = mHandleBounds.GetMidHPadded(mHandleBounds.H() * 0.5f);
-              mTargetRECT = mTargetRECT.GetMidHPadded(mHandleBounds.W() * 0.5f);
-
-              if (mDrawCircleLabels) {
-                if (mLabelMin.GetLength()) {
-                  IRECT textRect;
-                  GetUI()->MeasureText(mTextCircleLabelMin, mLabelMin.Get(), textRect);
-                  mMinLabelBounds = IRECT(mRECT.L, mHandleBounds.B - textRect.H(), mHandleBounds.L, mHandleBounds.B);
-                }
-                if (mLabelMax.GetLength()) {
-                  IRECT textRect;
-                  GetUI()->MeasureText(mTextCircleLabelMax, mLabelMax.Get(), textRect);
-                  mMaxLabelBounds = IRECT(mHandleBounds.R, mHandleBounds.B - textRect.H(), mRECT.R, mHandleBounds.B);
-                }
-                // Center Label need rework
-                if (mLabelCtr.GetLength()) {
-                  IRECT textRect;
-                  GetUI()->MeasureText(mTextCircleLabelCtr, mLabelCtr.Get(), textRect);
-                  mCtrLabelBounds = mRECT.GetFromTop(textRect.H()).GetMidHPadded(textRect.W() * 0.5f);
-                }
-
-              }
-
-              //mHandleBounds = GetAdjustedHandleBounds(mTargetRECT).GetReducedFromTop(mCtrLabelBounds.H()).GetReducedFromBottom(;
-
-
-              // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-              mRadius = (mHandleBounds.W() * 0.5f);
-              mCenterX = mHandleBounds.MW();
-              mCenterY = mHandleBounds.MH();
-              mRelThickness = mRadius * mFrameThickness * 0.05f / 2.f;
-              mRelShadowOffset = mRadius * mShadowOffset * 0.2f / 3.f;
-
-              // PATTERN TEST
-              // Patterns
-              mPatternShadow = IPattern(COLOR_BLACK);
-              mPatternHead = IPattern::CreateRadialGradient(
-                mCenterX,
-                mCenterY,
-                mRadius,
-                {
-                  IColorStop(mColor, 0.9f),
-                  //IColorStop(mColor.GetContrasted(1.0f), 0.9f),
-                  //IColorStop(mColor, 0.95f),
-                  IColorStop(ColorGetAltered(mColor, 0.5f), 1.f)
-                }
-              );
-              mPatternHeadLights = IPattern::CreateRadialGradient(
-                mCenterX - GetPercW() * 0.5f * mRadius,
-                mCenterY - GetPercH() * 0.5f * mRadius,
-                mRadius * knobScales.head.relRadius,
-                {
-                  IColorStop(IColor(200, 255,255,255), 0.0f),
-                  IColorStop(COLOR_TRANSPARENT, 1.0f)
-                }
-              );
-              mPatternRim = IPattern::CreateLinearGradient(
-                mCenterX - mRadius, mCenterY - mRadius,
-                mCenterX + mRadius, mCenterY + mRadius,
-                {
-                  IColorStop(GetColor(kON), 0.5f),
-                  IColorStop(GetColor(kFR), 1.0f)
-                }
-              );
-              mPatternEdge = IPattern::CreateLinearGradient(
-                mCenterX - 0.5f * mRadius, mCenterY - 0.5f * mRadius,
-                mCenterX + 0.5f * mRadius, mCenterY + 0.5f * mRadius,
-                {
-                  IColorStop(IColor(130, 255, 255, 255), 0.0f),
-                  IColorStop(IColor(20, 130, 130, 130), 0.5f),
-                  IColorStop(IColor(130, 0, 0, 0), 1.0f)
-                }
-              );
-
-              // Shadows
-              mShadowFrame = IShadow(
-                mPatternShadow,
-                mRadius * 0.1f,
-                0.6f * mRadius * GetPercW(),
-                0.6f * mRadius * GetPercH(),
-                0.5f,
-                true
-              );
-
-              mShadowHead = IShadow(
-                mPatternShadow,
-                mRadius * 0.01f,
-                0.3f * mRadius * GetPercW(),
-                0.3f * mRadius * GetPercH(),
-                0.5f,
-                true
-              );
-
-              mShadowArrow = IShadow(
-                mPatternShadow,
-                mRadius * 0.01f,
-                0.1f * mRadius * GetPercW(),
-                0.1f * mRadius * GetPercH(),
-                0.5f,
-                true
-              );
-              // ---}
-
-              SetDirty(false);
-            }
-            //void GrayOut(bool gray) override;
-            float GetPercW() { return mCenterX / GetDelegate()->GetEditorWidth(); }
-            float GetPercH() { return mCenterY / GetDelegate()->GetEditorHeight(); }
-
-            IColor ColorGetAltered(IColor pColor, float change) {
-              IColor color = pColor;
-              color.R = int(color.R * change); color.R = (color.R > 255) ? 255 : color.R;
-              color.B = int(color.B * change); color.B = (color.B > 255) ? 255 : color.B;
-              color.G = int(color.G * change); color.G = (color.G > 255) ? 255 : color.G;
-              return color;
-            }
-
-
-          protected:
-            bool mDisplayParamValue;
-            bool mShowParamLabel = true;
-            bool mDrawCircleLabels;
-            IRECT mHandleBounds;
-            IRECT mLabelBounds;
-            IRECT mValueBounds;
-            IRECT mMinLabelBounds;
-            IRECT mMaxLabelBounds;
-            IRECT mCtrLabelBounds;
-            float mAngleMin, mAngleMax, mAngleDefault;
-            float mKnobFrac;
-            float mRadius, mAngleValue, mCenterX, mCenterY, mRelThickness, mRelShadowOffset;
-            WDL_String mLabel;
-            WDL_String mLabelMin;
-            WDL_String mLabelMax;
-            WDL_String mLabelCtr;
-            IText mLabelText;
-            IText& mValueText = mText;
-            IText mTextCircleLabelMin;
-            IText mTextCircleLabelMax;
-            IText mTextCircleLabelCtr;
-            IColor mColor;
-            IPattern mPatternShadow;
-            IPattern mPatternHead;
-            IPattern mPatternHeadLights;
-            IPattern mPatternRim;
-            IPattern mPatternEdge;
-            ILayerPtr mLayer;
-            IShadow mShadowFrame;
-            IShadow mShadowHead;
-            IShadow mShadowArrow;
-            IStrokeOptions mStrokeOptions;
-            IFillOptions mFillOptions;
-            const struct KnobScaleVals
-            {
-              const float relRadius = 1.f;
-              const float relThickness = 2.f;
-              const float relInnerRadius = 0.f;
-            };
-            const struct KnobScales
-            {
-              const KnobScaleVals valArc = { 1.f, 4.f };
-              const KnobScaleVals dots = { 1.f, 2.f };
-              const KnobScaleVals rim = { 0.825f, -1.f };
-              const KnobScaleVals outerRim = { 0.9f, 0.06f };
-              const KnobScaleVals head = { 0.75f, 0.06f };
-              const KnobScaleVals outerArrow = { 0.825f, 3.f, 0.7f };
-              const KnobScaleVals arrow = { 0.75f, 3.f, 0.f };
-
-            } knobScales;
-          };
-
-      */
-
-
-
-
-
       class SRVectorSwitch
         : public ISwitchControlBase
         , public Base::SRVectorBase
@@ -1810,104 +1331,6 @@ namespace SR {
           g.DrawText(mStyle.valueText, mOffText.Get(), mValueBounds);
       }
 
-      // Todo: Commented until reimplementation
-
-
-          /** A vector switch control. Click to cycle through states. */
-
-      /*
-
-          class SRVectorSwitch : public ISwitchControlBase
-            , public IVectorBase
-          {
-          public:
-            SRVectorSwitch(IRECT bounds, int paramIdx = kNoParameter, IActionFunction actionFunc = SplashClickActionFunc,
-              const char* label = "", const IVStyle& style = DEFAULT_STYLE, int numStates = 2)
-              : ISwitchControlBase(bounds, paramIdx, actionFunc, numStates)
-              , IVectorBase(style)
-            {
-              AttachIControl(this, ""); // TODO: Should hand label, but may be solved through adding IVSwitch
-              mDblAsSingleClick = true;
-              mStr.Set(label);
-            }
-
-            void Draw(IGraphics& g) override
-            {
-              IRECT handleBounds = DrawVectorButton(g, mRECT, mMouseDown, mMouseIsOver);
-
-              if (CStringHasContents(mStr.Get()))
-                g.DrawText(mText, mStr.Get(), handleBounds);
-            }
-
-            void SetDirty(bool push, int valIdx = kNoValIdx) override
-            {
-              IControl::SetDirty(push);
-
-              const IParam* pParam = GetParam();
-
-              if (pParam)
-                pParam->GetDisplayForHost(mStr);
-            }
-
-            IRECT DrawVectorButton(IGraphics&g, const IRECT& bounds, bool pressed, bool mouseOver)
-            {
-              // background
-              g.FillRect(GetColor(kBG), bounds);
-
-              IRECT handleBounds = GetAdjustedHandleBounds(bounds);
-              const float cornerRadius = IVectorBase::mStyle.roundness * (handleBounds.W() / 2.f);
-
-              // Pressed
-              if (pressed) {
-                g.FillRoundRect(GetColor(kPR), handleBounds, cornerRadius);
-
-                //inner shadow
-                if (mStyle.drawShadows) {
-                  g.PathRect(handleBounds.GetHSliced(mStyle.shadowOffset));
-                  g.PathRect(handleBounds.GetVSliced(mStyle.shadowOffset));
-                  g.PathFill(GetColor(kSH));
-                }
-
-                if (mouseOver) g.FillRoundRect(GetColor(kHL), handleBounds, cornerRadius);
-                if (mControl->GetAnimationFunction()) DrawSplash(g);
-                if (mStyle.drawFrame) g.DrawRoundRect(GetColor(kFR), handleBounds, cornerRadius, 0, mStyle.frameThickness);
-              }
-              else {
-                // Normal button state
-                if (mNumStates > 2 || GetValue() == 0) {
-                  //outer shadow
-                  if (mStyle.drawShadows) g.FillRoundRect(GetColor(kSH), handleBounds, cornerRadius);
-                  g.FillRoundRect(GetColor(kFG), handleBounds, cornerRadius);
-                  if (mouseOver) g.FillRoundRect(GetColor(kHL), handleBounds, cornerRadius);
-                  if (mControl->GetAnimationFunction()) DrawSplash(g);
-                  if (mStyle.drawFrame) g.DrawRoundRect(GetColor(kFR), handleBounds, cornerRadius, 0, mStyle.frameThickness);
-                }
-
-                // If button should be "inside"
-                else {
-                  g.FillRoundRect(GetColor(kPR), handleBounds.GetTranslated(mStyle.shadowOffset, mStyle.shadowOffset), cornerRadius);
-                  //inner shadow
-                  if (mStyle.drawShadows) {
-                    g.PathRect(handleBounds.GetHSliced(mStyle.shadowOffset));
-                    g.PathRect(handleBounds.GetVSliced(mStyle.shadowOffset));
-                    g.PathFill(GetColor(kSH));
-                  }
-                  if (mouseOver) g.FillRoundRect(GetColor(kHL), handleBounds.GetTranslated(mStyle.shadowOffset, mStyle.shadowOffset), cornerRadius);
-                  if (mControl->GetAnimationFunction()) DrawSplash(g);
-                  if (mStyle.drawShadows) g.DrawRoundRect(GetColor(kFR), handleBounds.GetTranslated(mStyle.shadowOffset, mStyle.shadowOffset), cornerRadius, 0, mStyle.frameThickness);
-                }
-              }
-
-              return handleBounds;
-            }
-
-
-          protected:
-            WDL_String mStr;
-          };
-          */
-
-
 
           /** A basic control to display some text */
       class SRLogo
@@ -1959,7 +1382,7 @@ namespace SR {
       /** A base class for mult-strip/track controls, such as multi-sliders, meters */
       class SRTrackControlBase
         : public IControl
-        , public IVectorBase
+        , public Base::SRVectorBase
       {
       public:
         SRTrackControlBase(IRECT bounds, int maxNTracks = 1, float minTrackValue = 0.f, float maxTrackValue = 1.f, const char* trackNames = 0, ...)
