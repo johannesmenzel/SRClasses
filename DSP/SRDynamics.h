@@ -208,6 +208,7 @@ namespace SR {
       // Sets target loudness of the track
       virtual void SetReference(double referenceDb) {
         mReferenceDb = referenceDb;
+        if (mIsAutoMakeup) AdjustAutoMakeup();
       }
 
       // Sets soft knee width in dB
