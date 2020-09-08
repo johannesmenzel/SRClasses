@@ -46,8 +46,8 @@ namespace SR {
       const IText SR_DEFAULT_TEXT = IText(20.f, SR_DEFAULT_COLOR, nullptr, EAlign::Center, EVAlign::Top);
       const IText SR_DEFAULT_TEXT_KNOB_LABEL = IText(24.f, SR_DEFAULT_COLOR, nullptr, EAlign::Center, EVAlign::Top);
       const IText SR_DEFAULT_TEXT_KNOB_VALUE = IText(20.f, COLOR_MID_GRAY, nullptr, EAlign::Center, EVAlign::Bottom);
-      const IText SR_DEFAULT_TEXT_BUTTON_LABEL = IText(16.f, SR_DEFAULT_COLOR, nullptr, EAlign::Center, EVAlign::Bottom);
-      const IText SR_DEFAULT_TEXT_BUTTON_VALUE = IText(12.f, COLOR_MID_GRAY, nullptr, EAlign::Center, EVAlign::Bottom);;
+      const IText SR_DEFAULT_TEXT_BUTTON_LABEL = IText(20.f, SR_DEFAULT_COLOR, nullptr, EAlign::Center, EVAlign::Bottom);
+      const IText SR_DEFAULT_TEXT_BUTTON_VALUE = IText(14.f, COLOR_MID_GRAY, nullptr, EAlign::Center, EVAlign::Bottom);;
       const IText SR_DEFAULT_TEXT_VERSIONSTRING = IText(14.f, SR_DEFAULT_COLOR, nullptr, EAlign::Near, EVAlign::Middle);
       const IText SR_DEFAULT_TEXT_PRESETMENU = IText(30.f, SR_DEFAULT_COLOR, nullptr, EAlign::Center, EVAlign::Middle);
 
@@ -93,6 +93,8 @@ namespace SR {
       );
       const IVStyle SR_DEFAULT_STYLE_KNOB = SR_DEFAULT_STYLE;
       const IVStyle SR_DEFAULT_STYLE_BUTTON = SR_DEFAULT_STYLE
+        .WithLabelText(SR_DEFAULT_TEXT_BUTTON_LABEL)
+        .WithValueText(SR_DEFAULT_TEXT_BUTTON_VALUE)
         /*.WithShowLabel(false)*/
         .WithColor(EVColor::kFG, IColor(255, 30, 50, 70))
         /*.WithDrawShadows(false)*/
