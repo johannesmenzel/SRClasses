@@ -1,3 +1,4 @@
+***NOTE: This is archived here for tracing back development history. You will find recent developments [here](https://github.com/johannesmenzel/SRPlugins).***
 # SRClasses
 These are shared classes for SRPlugins, either DSP classes without third party dependencies or specific classes for IPlug2.
 # Included classes
